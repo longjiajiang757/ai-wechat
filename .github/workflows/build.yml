@@ -1,10 +1,15 @@
 name: Build APK
 
-# 只要你往 GitHub 推代码，就自动打包一个可安装的 APK
+# 推送代码或手动点击都会打包，并把 APK 挂到一个固定网址上，浏览器点开即可下载
 on:
   push:
     branches: ['**']
   workflow_dispatch:
+
+# 连续推送时，取消上一次还在跑的构建，省时间也省额度
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -53,32 +58,68 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      # 说明：不需要配置任何 secret。
-      # - Firebase 已移除，不再需要 google-services.json
-      # - 签名密钥 app/ai-wechat.jks 已随仓库提交，CI 直接使用
+      # 不需要配置任何 secret：
+      # - Firebase 已移除，不需要 google-services.json
+      # - 签名密钥 app/ai-wechat.jks 已随仓库提交
       - name: Gradle Build
         run: |
           chmod +x gradlew
           ./gradlew assembleGithubRelease --stacktrace
 
-      - name: Upload APK
+      # 把文件名改成固定名字，下载网址才不会每次都变。
+      # 不写死文件名：按 "universal"/"arm64" 关键字找，AGP 改了命名也不会挂。
+      - name: Rename APKs to stable names
+        run: |
+          set -euo pipefail
+          cd app/build/outputs/apk/github/release
+          echo "--- 原始产物 ---"
+          ls -lh *.apk
+
+          # 注意：set -e + pipefail 下 ls 没匹配会返回非 0，必须 || true 兜住
+          UNIV=$(ls *universal*.apk 2>/dev/null | head -1 || true)
+          ARM=$(ls *arm64*.apk 2>/dev/null | head -1 || true)
+
+          # 没有 universal（比如上游改了 splits 配置）就退而用任意一个，保证一定有下载文件
+          if [ -z "$UNIV" ]; then UNIV=$(ls *.apk 2>/dev/null | head -1 || true); fi
+          if [ -z "$UNIV" ]; then
+            echo "错误: 没有找到任何 APK，打包环节可能失败了" >&2
+            exit 1
+          fi
+
+          cp "$UNIV" ai-wechat.apk
+          echo "通用版 <- $UNIV"
+
+          if [ -n "$ARM" ]; then
+            cp "$ARM" ai-wechat-arm64.apk
+            echo "arm64 版 <- $ARM"
+          fi
+
+          echo "--- 重命名后 ---"
+          ls -lh ai-wechat*.apk
+
+      - name: Upload APK (构建产物，需登录才能下)
         uses: actions/upload-artifact@v4
         with:
           name: ai-wechat-apk
-          path: app/build/outputs/apk/github/release/*.apk
+          path: app/build/outputs/apk/github/release/ai-wechat*.apk
           if-no-files-found: error
 
-      # 同时挂到 Release 上，手机上点链接即可直接下载安装
-      - name: Publish release
-        if: success()
+      # 关键一步：用固定 tag "latest"，网址永久不变，每次推送覆盖更新
+      # 公开仓库下这个地址免登录、浏览器直接下载
+      - name: Publish to fixed release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: build-${{ github.run_number }}
-          name: Build ${{ github.run_number }}
-          prerelease: true
+          tag_name: latest
+          name: AI 微信（最新版）
           body: |
-            自动构建（commit `${{ github.sha }}`）
+            最新构建（commit `${{ github.sha }}`）
 
-            下载 `app-arm64-v8a-release.apk`（绝大多数手机）安装即可。
+            **下载地址（浏览器打开即可，无需登录）**
+            - 通用版：`.../releases/download/latest/ai-wechat.apk`
+            - arm64 精简版：`.../releases/download/latest/ai-wechat-arm64.apk`
+
+            绝大多数手机下通用版即可。
           files: |
-            app/build/outputs/apk/github/release/*.apk
+            app/build/outputs/apk/github/release/ai-wechat.apk
+            app/build/outputs/apk/github/release/ai-wechat-arm64.apk
+          fail_on_unmatched_files: false

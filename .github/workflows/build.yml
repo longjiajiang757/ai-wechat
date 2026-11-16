@@ -1,0 +1,84 @@
+name: Build APK
+
+# 只要你往 GitHub 推代码，就自动打包一个可安装的 APK
+on:
+  push:
+    branches: ['**']
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # 与上游保持一致：JetBrains Runtime 21
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'jetbrains'
+          java-version: '21'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # web 模块的 preBuild 会构建 web-ui 前端，必须有 Node + pnpm
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: web-ui/pnpm-lock.yaml
+
+      - name: Install web-ui dependencies
+        working-directory: web-ui
+        run: pnpm install --frozen-lockfile
+
+      - name: Gradle cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      # 说明：不需要配置任何 secret。
+      # - Firebase 已移除，不再需要 google-services.json
+      # - 签名密钥 app/ai-wechat.jks 已随仓库提交，CI 直接使用
+      - name: Gradle Build
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleGithubRelease --stacktrace
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ai-wechat-apk
+          path: app/build/outputs/apk/github/release/*.apk
+          if-no-files-found: error
+
+      # 同时挂到 Release 上，手机上点链接即可直接下载安装
+      - name: Publish release
+        if: success()
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: Build ${{ github.run_number }}
+          prerelease: true
+          body: |
+            自动构建（commit `${{ github.sha }}`）
+
+            下载 `app-arm64-v8a-release.apk`（绝大多数手机）安装即可。
+          files: |
+            app/build/outputs/apk/github/release/*.apk

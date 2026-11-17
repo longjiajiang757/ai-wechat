@@ -105,8 +105,19 @@ class ChatRequestFactory(
         // 模型、思考级别、搜索、工具等以会话上固定的配置为准
         val assistant = settings.getAssistantOf(conversation)
         val model = settings.getChatModelOf(conversation)
-            ?: throw IllegalStateException("No chat model selected")
-        val provider = model.findProvider(settings.providers) ?: error("Provider not found")
+            ?: throw IllegalStateException(
+                "还没选模型。去「设置 → 服务商」填好 Base URL、API Key 和模型 ID，再回来聊。"
+            )
+        val provider = model.findProvider(settings.providers)
+            ?: throw IllegalStateException(
+                "这个模型对应的服务商不在了。去「设置 → 服务商」确认一下，或者重新选个模型。"
+            )
+        // 有模型但没填 Key 时，请求会以 401 失败，报错信息很难懂，提前说清楚
+        if ((provider as? ProviderSetting.ApiKey)?.apiKey?.isBlank() == true) {
+            throw IllegalStateException(
+                "服务商「${provider.name}」还没填 API Key。去「设置 → 服务商 → ${provider.name}」填上就能用了。"
+            )
+        }
         return ChatTurnContext(
             settings = settings,
             assistant = assistant,

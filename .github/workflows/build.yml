@@ -112,13 +112,15 @@ jobs:
           tag_name: latest
           name: AI 微信（最新版）
           body: |
-            最新构建（commit `${{ github.sha }}`）
+            **直接下载（手机浏览器打开即可，不用登录）**
 
-            **下载地址（浏览器打开即可，无需登录）**
-            - 通用版：`.../releases/download/latest/ai-wechat.apk`
-            - arm64 精简版：`.../releases/download/latest/ai-wechat-arm64.apk`
+            - 通用版（推荐，绝大多数手机）：[${{ github.server_url }}/${{ github.repository }}/releases/download/latest/ai-wechat.apk](${{ github.server_url }}/${{ github.repository }}/releases/download/latest/ai-wechat.apk)
+            - arm64 精简版（体积小一点）：[${{ github.server_url }}/${{ github.repository }}/releases/download/latest/ai-wechat-arm64.apk](${{ github.server_url }}/${{ github.repository }}/releases/download/latest/ai-wechat-arm64.apk)
 
-            绝大多数手机下通用版即可。
+            安装时如果提示「禁止安装未知来源应用」，在弹窗里允许浏览器安装即可。
+
+            ---
+            构建来源：commit `${{ github.sha }}`
           files: |
             app/build/outputs/apk/github/release/ai-wechat.apk
             app/build/outputs/apk/github/release/ai-wechat-arm64.apk

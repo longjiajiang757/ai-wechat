@@ -41,10 +41,13 @@ val buildWebUi = tasks.register<Exec>("buildWebUi") {
     isIgnoreExitValue = true
 
     doLast {
+        // Gradle 9 移除了 Exec 任务的 exitValue 属性，这里改为直接看产物是否生成，
+        // 不依赖已被删除的 API，跨 Gradle 版本都成立。
         val outputDir = webStaticResourcesDir.asFile
-        if (exitValue != 0 || !outputDir.exists()) {
+        val built = outputDir.exists() && outputDir.listFiles()?.isNotEmpty() == true
+        if (!built) {
             logger.warn(
-                "警告: web-ui 前端构建未成功（exitValue=$exitValue），本次 APK 将不包含网页版界面资源。" +
+                "警告: web-ui 前端构建未成功，本次 APK 将不包含网页版界面资源。" +
                     "如需该功能，请先在本机安装 Node 22 + pnpm 11。"
             )
             outputDir.mkdirs()

@@ -148,12 +148,12 @@ fun WeChatPluginMarketPage() {
     val assistants = remember(settings) {
         settings.assistants.filter { it.name.isNotBlank() }
     }
-    var selectedAssistantId by remember(assistants) {
-        mutableStateOf(assistants.firstOrNull()?.id)
-    }
-    val currentAssistant: Assistant? = remember(assistants, selectedAssistantId) {
-        assistants.firstOrNull { it.id == selectedAssistantId }
-    }
+    // 只在首次进入时定初值；之后即使 assistants 变了（装插件会改 modeInjectionIds），
+    // 也不能重置用户的选择，否则一装插件就跳回第一个角色。
+    var selectedAssistantId by remember { mutableStateOf(assistants.firstOrNull()?.id) }
+    // 选中的角色被删掉时兜底到第一个
+    val currentAssistant: Assistant? =
+        assistants.firstOrNull { it.id == selectedAssistantId } ?: assistants.firstOrNull()
 
     // 已装插件的 id 集合：从角色的 modeInjectionIds 反查
     val installedIds: Set<String> = remember(settings, currentAssistant) {
@@ -194,15 +194,22 @@ fun WeChatPluginMarketPage() {
                     )
                 } else {
                     val target = existing ?: return@update s
-                    s.copy(
-                        modeInjections = s.modeInjections.filterNot { it.id == target.id },
-                        assistants = s.assistants.map {
-                            if (it.id == assistant.id) {
-                                it.copy(modeInjectionIds = it.modeInjectionIds - target.id)
-                            } else {
-                                it
-                            }
+                    val updatedAssistants = s.assistants.map {
+                        if (it.id == assistant.id) {
+                            it.copy(modeInjectionIds = it.modeInjectionIds - target.id)
+                        } else {
+                            it
                         }
+                    }
+                    // 还有别的角色在用它，就只解绑不删除，别把别人的插件一起干掉
+                    val stillUsed = updatedAssistants.any { target.id in it.modeInjectionIds }
+                    s.copy(
+                        modeInjections = if (stillUsed) {
+                            s.modeInjections
+                        } else {
+                            s.modeInjections.filterNot { it.id == target.id }
+                        },
+                        assistants = updatedAssistants
                     )
                 }
             }

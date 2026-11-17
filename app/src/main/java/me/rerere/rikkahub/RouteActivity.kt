@@ -152,6 +152,7 @@ import me.rerere.rikkahub.ui.pages.wechat.rememberBootSoundPlayer
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.zIndex
 
 private const val TAG = "RouteActivity"
 private const val ACTION_TRANSLATE = "me.rerere.rikkahub.action.TRANSLATE"
@@ -325,25 +326,6 @@ class RouteActivity : ComponentActivity() {
                         .semantics { testTagsAsResourceId = true }
                         .background(MaterialTheme.colorScheme.background)
                 ) {
-                    // 启动动画：只在冷启动时放一次，转屏或从后台回来不再打扰。
-                    // rememberSaveable 让旋转屏幕后不会又播一遍。
-                    var showBootAnimation by rememberSaveable { mutableStateOf(true) }
-                    val bootSound = rememberBootSoundPlayer()
-                    LaunchedEffect(Unit) {
-                        if (showBootAnimation) {
-                            bootSound.play()
-                        }
-                    }
-                    if (showBootAnimation) {
-                        EvaBootAnimation(
-                            modifier = Modifier.fillMaxSize(),
-                            onFinished = {
-                                showBootAnimation = false
-                                bootSound.release()
-                            }
-                        )
-                    }
-
                     NavDisplay(
                         backStack = backStack,
                         entryDecorators = listOf(
@@ -632,6 +614,27 @@ class RouteActivity : ComponentActivity() {
                             }
                         }
                     )
+                    // 启动动画放在 NavDisplay 之后：Box 里后声明的画在上层，
+                    // 放前面会被主界面盖住。用 zIndex 双保险。
+                    // 只在冷启动放一次，旋转屏幕后（rememberSaveable 恢复）不再播。
+                    var showBootAnimation by rememberSaveable { mutableStateOf(true) }
+                    val bootSound = rememberBootSoundPlayer()
+                    LaunchedEffect(Unit) {
+                        if (showBootAnimation) {
+                            bootSound.play()
+                        }
+                    }
+                    if (showBootAnimation) {
+                        EvaBootAnimation(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .zIndex(10f),
+                            onFinished = {
+                                showBootAnimation = false
+                                bootSound.release()
+                            }
+                        )
+                    }
                     if (BuildConfig.DEBUG) {
                         Text(
                             text = "[开发模式]",

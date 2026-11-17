@@ -36,24 +36,18 @@ val buildWebUi = tasks.register<Exec>("buildWebUi") {
     inputs.dir(webUiDir.dir("public"))
     outputs.dir(webStaticResourcesDir)
 
-    // 前端只是把网页版界面挂进 APK 的附赠功能。这里构建失败不该让整个 APK 构建失败
-    // （例如本机没装 pnpm），下面 doLast 会补一个空目录，保证 Gradle 输出声明成立。
+    // 前端只是把网页版界面挂进 APK 的附赠功能，这里构建失败不该让整个 APK 构建失败
+    // （例如本机没装 pnpm）。输出目录在下面的配置阶段就建好，保证 Gradle 输出声明成立。
+    //
+    // 注意：这里不能再加 doLast 之类的执行期闭包。闭包会捕获脚本级对象
+    // （webStaticResourcesDir、logger 等），而 Gradle 9 的配置缓存无法序列化
+    // 脚本对象引用，会在构建收尾时判整个构建失败（APK 明明已经打出来了）。
     isIgnoreExitValue = true
-
-    doLast {
-        // Gradle 9 移除了 Exec 任务的 exitValue 属性，这里改为直接看产物是否生成，
-        // 不依赖已被删除的 API，跨 Gradle 版本都成立。
-        val outputDir = webStaticResourcesDir.asFile
-        val built = outputDir.exists() && outputDir.listFiles()?.isNotEmpty() == true
-        if (!built) {
-            logger.warn(
-                "警告: web-ui 前端构建未成功，本次 APK 将不包含网页版界面资源。" +
-                    "如需该功能，请先在本机安装 Node 22 + pnpm 11。"
-            )
-            outputDir.mkdirs()
-        }
-    }
 }
+
+// 提前建目录：前端没构建成功时，输出目录也真实存在，
+// 下游 :app 打包资源和 Gradle 的输出声明都不会出错。
+webStaticResourcesDir.asFile.mkdirs()
 
 android {
     namespace = "me.rerere.rikkahub.web"

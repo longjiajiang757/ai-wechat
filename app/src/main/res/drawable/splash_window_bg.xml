@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  启动窗口背景：整张竖图居中裁切铺满，底下垫一层平均色。
+  图片按 centerCrop 缩放，窄屏和宽屏都能铺满，不会露出白边。
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <color android:color="#FF736267" />
+    </item>
+    <item>
+        <bitmap
+            android:gravity="centerCrop"
+            android:src="@drawable/splash_bg" />
+    </item>
+</layer-list>

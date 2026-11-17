@@ -173,6 +173,12 @@ data class DisplaySetting(
     val enableQuoteHighlight: Boolean = false,
     val enableBlurEffect: Boolean = false,
     val backgroundEffectType: BackgroundEffectType = BackgroundEffectType.BLUR,
+    /** 全局背景图地址（本地文件 URI 或网络 URL），null 表示用纯色 */
+    val appBackground: String? = null,
+    /** 全局背景图不透明度 0~1，调低能让文字更清楚 */
+    val appBackgroundOpacity: Float = 0.35f,
+    /** 背景图叠在微信界面还是所有页面 */
+    val appBackgroundGlobal: Boolean = false,
     val chatFontFamily: ChatFontFamily = ChatFontFamily.DEFAULT,
     val chatCustomFontPath: String = "",
     val chatCustomFontName: String = "",

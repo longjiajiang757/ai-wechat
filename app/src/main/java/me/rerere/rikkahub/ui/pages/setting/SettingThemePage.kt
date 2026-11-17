@@ -85,6 +85,7 @@ import me.rerere.ui.components.RikkaConfirmDialog
 import org.koin.androidx.compose.koinViewModel
 import kotlin.math.roundToInt
 import kotlin.uuid.Uuid
+import me.rerere.rikkahub.ui.pages.assistant.detail.BackgroundPicker
 
 private val themeJson = Json {
     ignoreUnknownKeys = true
@@ -124,6 +125,63 @@ fun SettingThemePage(vm: SettingVM = koinViewModel()) {
             contentPadding = innerPadding + PaddingValues(8.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
+            item("appBackground") {
+                CardGroup {
+                    formItem(
+                        headlineContent = { Text("聊天背景图") },
+                        supportingContent = {
+                            Text(
+                                if (settings.displaySetting.appBackground == null) {
+                                    "选一张图铺在聊天页和列表页底下；不给就是纯色"
+                                } else {
+                                    "已设置，调低不透明度可以让文字更清楚"
+                                }
+                            )
+                        },
+                    ) {
+                        BackgroundPicker(
+                            background = settings.displaySetting.appBackground,
+                            backgroundOpacity = settings.displaySetting.appBackgroundOpacity,
+                            onUpdate = { bg ->
+                                vm.updateSettings {
+                                    it.copy(
+                                        displaySetting = it.displaySetting.copy(appBackground = bg)
+                                    )
+                                }
+                            }
+                        )
+                    }
+
+                    if (settings.displaySetting.appBackground != null) {
+                        val opacity = settings.displaySetting.appBackgroundOpacity.coerceIn(0f, 1f)
+                        formItem(
+                            headlineContent = { Text("不透明度") },
+                            supportingContent = { Text("调低一点，聊天文字会更清楚") },
+                            trailingContent = {
+                                Text(
+                                    text = "${(opacity * 100).roundToInt()}%",
+                                    style = MaterialTheme.typography.labelLarge,
+                                    color = MaterialTheme.colorScheme.primary,
+                                )
+                            },
+                        ) {
+                            Slider(
+                                value = opacity,
+                                onValueChange = { v ->
+                                    vm.updateSettings {
+                                        it.copy(
+                                            displaySetting = it.displaySetting.copy(appBackgroundOpacity = v)
+                                        )
+                                    }
+                                },
+                                valueRange = 0f..1f,
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                        }
+                    }
+                }
+            }
+
             if (settings.dynamicColor) {
                 item("dynamicColorHint") {
                     Box(

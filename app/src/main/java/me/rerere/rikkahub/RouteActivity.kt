@@ -146,6 +146,12 @@ import okhttp3.OkHttpClient
 import org.koin.android.ext.android.inject
 import org.koin.compose.koinInject
 import kotlin.uuid.Uuid
+import me.rerere.rikkahub.ui.pages.wechat.EvaBootAnimation
+import me.rerere.rikkahub.ui.pages.wechat.EVA_BOOT_DURATION_MS
+import me.rerere.rikkahub.ui.pages.wechat.rememberBootSoundPlayer
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
 
 private const val TAG = "RouteActivity"
 private const val ACTION_TRANSLATE = "me.rerere.rikkahub.action.TRANSLATE"
@@ -319,6 +325,25 @@ class RouteActivity : ComponentActivity() {
                         .semantics { testTagsAsResourceId = true }
                         .background(MaterialTheme.colorScheme.background)
                 ) {
+                    // 启动动画：只在冷启动时放一次，转屏或从后台回来不再打扰。
+                    // rememberSaveable 让旋转屏幕后不会又播一遍。
+                    var showBootAnimation by rememberSaveable { mutableStateOf(true) }
+                    val bootSound = rememberBootSoundPlayer()
+                    LaunchedEffect(Unit) {
+                        if (showBootAnimation) {
+                            bootSound.play()
+                        }
+                    }
+                    if (showBootAnimation) {
+                        EvaBootAnimation(
+                            modifier = Modifier.fillMaxSize(),
+                            onFinished = {
+                                showBootAnimation = false
+                                bootSound.release()
+                            }
+                        )
+                    }
+
                     NavDisplay(
                         backStack = backStack,
                         entryDecorators = listOf(

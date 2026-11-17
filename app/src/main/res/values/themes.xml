@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
   <style name="Theme.Rikkahub" parent="android:Theme.Material.Light.NoActionBar">
-    <item name="android:windowBackground">#FFFEF7FF</item>
+    <!-- 启动窗口背景：先铺整张竖图，等待期不是白屏 -->
+    <item name="android:windowBackground">@drawable/splash_window_bg</item>
   </style>
 </resources>

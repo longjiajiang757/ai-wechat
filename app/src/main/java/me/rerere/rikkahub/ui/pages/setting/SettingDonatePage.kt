@@ -36,6 +36,16 @@ import me.rerere.rikkahub.ui.components.ui.CardGroup
 import me.rerere.rikkahub.ui.components.ui.CardGroupIcon
 import me.rerere.rikkahub.ui.theme.CustomColors
 import me.rerere.rikkahub.utils.openUrl
+import android.net.Uri
+import java.io.File
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import me.rerere.hugeicons.stroke.MusicNote01
+import me.rerere.hugeicons.stroke.Delete02
 
 /** 作者名 */
 private const val AUTHOR_NAME = "嘉酱"
@@ -98,6 +108,8 @@ fun SettingDonatePage() {
                     ).show()
                 }
             )
+
+            BootSoundCardGroup(context = context)
 
             LinksCardGroup(
                 onOpenRepo = { context.openUrl(REPO_URL) },
@@ -235,4 +247,105 @@ private fun LinksCardGroup(
 private fun copyToClipboard(context: Context, text: String) {
     val manager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
     manager.setPrimaryClip(ClipData.newPlainText("qq", text))
+}
+
+
+/**
+ * 启动音设置。
+ *
+ * 内置的是一段合成音（不含任何第三方素材）。用户可以导入自己的音频
+ * 替换它，文件存到 App 私有目录，卸载才会清掉。
+ * 这样想要哪段声音都行，App 本身不带受版权保护的素材。
+ */
+@Composable
+private fun BootSoundCardGroup(context: Context) {
+    var customName by remember { mutableStateOf(currentBootSoundName(context)) }
+
+    val picker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        if (uri != null) {
+            val ok = importBootSound(context, uri)
+            if (ok) {
+                customName = currentBootSoundName(context)
+                Toast.makeText(context, "启动音已替换", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(context, "这个文件读不了，换一个试试", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    CardGroup(
+        title = { Text("启动音效") }
+    ) {
+        item(
+            onClick = { picker.launch("audio/*") },
+            leadingContent = {
+                CardGroupIcon(
+                    icon = HugeIcons.MusicNote01,
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+            },
+            headlineContent = { Text("导入自定义启动音") },
+            supportingContent = {
+                Text(customName ?: "当前是内置的合成音，点这里换成你自己的")
+            },
+        )
+        if (customName != null) {
+            item(
+                onClick = {
+                    clearBootSound(context)
+                    customName = null
+                    Toast.makeText(context, "已恢复内置启动音", Toast.LENGTH_SHORT).show()
+                },
+                leadingContent = {
+                    CardGroupIcon(
+                        icon = HugeIcons.Delete02,
+                        containerColor = MaterialTheme.colorScheme.errorContainer,
+                        contentColor = MaterialTheme.colorScheme.onErrorContainer
+                    )
+                },
+                headlineContent = { Text("恢复内置启动音") },
+            )
+        }
+    }
+}
+
+/** 启动音存放目录 */
+private fun bootSoundDir(context: Context): File {
+    val dir = File(context.filesDir, "boot_sound")
+    if (!dir.isDirectory) dir.mkdirs()
+    return dir
+}
+
+/** 当前自定义音效的文件名，没有就返回 null */
+private fun currentBootSoundName(context: Context): String? {
+    return bootSoundDir(context).listFiles()
+        ?.filter { it.isFile && it.length() > 1024 }
+        ?.maxByOrNull { it.lastModified() }
+        ?.name
+}
+
+/** 把用户选的音频复制进私有目录；成功返回 true */
+private fun importBootSound(context: Context, uri: Uri): Boolean {
+    return runCatching {
+        val dir = bootSoundDir(context)
+        // 先清掉旧的，省得播放器挑到上一个
+        dir.listFiles()?.forEach { it.delete() }
+        val ext = context.contentResolver.getType(uri)
+            ?.substringAfterLast('/')
+            ?.takeIf { it.isNotBlank() && it.length <= 5 }
+            ?: "mp3"
+        val target = File(dir, "custom_boot.$ext")
+        context.contentResolver.openInputStream(uri)?.use { input ->
+            target.outputStream().use { output -> input.copyTo(output) }
+        } ?: return false
+        target.length() > 1024
+    }.getOrDefault(false)
+}
+
+/** 删除自定义音效，回到内置音 */
+private fun clearBootSound(context: Context) {
+    bootSoundDir(context).listFiles()?.forEach { it.delete() }
 }

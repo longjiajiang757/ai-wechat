@@ -76,6 +76,9 @@ import me.rerere.hugeicons.stroke.Add01
 fun WeChatHomePage() {
     var selectedTab by remember { mutableIntStateOf(0) }
     var pendingNewChat by remember { mutableStateOf(false) }
+    // 设了背景图时 Scaffold 要让出底色，不然会把图整个盖住
+    val settings = LocalSettings.current
+    val hasBackground = !settings.displaySetting.appBackground.isNullOrBlank()
     val viewModel: WeChatHomeVM = koinViewModel()
     val navController = LocalNavController.current
     val assistants by viewModel.assistants.collectAsStateWithLifecycle()
@@ -106,8 +109,10 @@ fun WeChatHomePage() {
         )
     }
 
+    Box(modifier = Modifier.fillMaxSize()) {
+    WeChatBackground()
     Scaffold(
-        containerColor = WeChatColors.ListBackground,
+        containerColor = if (hasBackground) Color.Transparent else WeChatColors.ListBackground,
         topBar = {
             // 微信顶部标题随 tab 变化，只有「微信」页有搜索按钮
             TopAppBar(
@@ -187,6 +192,7 @@ fun WeChatHomePage() {
                 else -> WeChatMeTab()
             }
         }
+    }
     }
 }
 

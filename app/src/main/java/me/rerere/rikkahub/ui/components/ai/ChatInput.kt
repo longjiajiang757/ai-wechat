@@ -52,6 +52,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -149,7 +150,12 @@ fun ChatInput(
     onStopVoiceMode: () -> Unit = {},
 ) {
     val toaster = LocalToaster.current
-    val containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+    // 微信风格：亮色主题用白底输入栏，深色主题保留主题色保证可读性
+    val containerColor = if (isSystemInDarkTheme()) {
+        MaterialTheme.colorScheme.surfaceContainerLow
+    } else {
+        me.rerere.rikkahub.ui.pages.wechat.WeChatColors.ListBackground
+    }
 
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current

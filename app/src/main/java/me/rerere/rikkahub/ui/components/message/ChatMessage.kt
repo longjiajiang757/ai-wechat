@@ -29,6 +29,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.contentColorFor
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -418,7 +419,7 @@ private fun MessagePartsBlock(
                             if (role == MessageRole.USER) {
                                 ChatMessageBubble(
                                     role = role,
-                                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = settings.displaySetting.bubbleOpacity),
+                                    color = wechatBubbleColor(MaterialTheme.colorScheme.primaryContainer).copy(alpha = settings.displaySetting.bubbleOpacity),
                                     onClick = { onUserMessageClick?.invoke() },
                                     // 用户气泡不占满整行，和助手的回复错开
                                     modifier = Modifier
@@ -455,7 +456,7 @@ private fun MessagePartsBlock(
                                             key(index) {
                                                 ChatMessageBubble(
                                                     role = role,
-                                                    color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = settings.displaySetting.bubbleOpacity),
+                                                    color = wechatIncomingBubbleColor(MaterialTheme.colorScheme.surfaceContainerHigh).copy(alpha = settings.displaySetting.bubbleOpacity),
                                                     modifier = Modifier.animateContentSize(),
                                                 ) {
                                                     MarkdownBlock(
@@ -687,3 +688,17 @@ private fun ChatMessageCitations(annotations: List<UIMessageAnnotation>) {
         }
     }
 }
+
+/**
+ * 微信风格气泡配色。
+ *
+ * 深色主题下不能强行用白底，否则正文看不见；所以亮色主题用微信绿/白，
+ * 深色主题仍用主题色，保证可读性。
+ */
+@Composable
+private fun wechatBubbleColor(fallback: Color): Color =
+    if (isSystemInDarkTheme()) fallback else me.rerere.rikkahub.ui.pages.wechat.WeChatColors.BubbleOutgoing
+
+@Composable
+private fun wechatIncomingBubbleColor(fallback: Color): Color =
+    if (isSystemInDarkTheme()) fallback else me.rerere.rikkahub.ui.pages.wechat.WeChatColors.BubbleIncoming

@@ -386,6 +386,13 @@ private fun WeChatDiscoverTab(viewModel: WeChatHomeVM) {
             }
         )
         HorizontalDivider(color = WeChatColors.Divider, thickness = 0.5.dp)
+
+        DiscoverEntry(
+            title = "插件市场",
+            subtitle = "给她加点性格：早安、深夜、拍照分享……",
+            onClick = { navController.navigate(me.rerere.rikkahub.Screen.WeChatPluginMarket) }
+        )
+        HorizontalDivider(color = WeChatColors.Divider, thickness = 0.5.dp)
     }
 
     if (pendingMemoryPick) {

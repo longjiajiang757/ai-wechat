@@ -76,8 +76,6 @@ import me.rerere.rikkahub.ui.context.LocalSharedTransitionScope
 import me.rerere.rikkahub.ui.context.LocalTTSState
 import me.rerere.rikkahub.ui.context.LocalToaster
 import me.rerere.rikkahub.ui.context.Navigator
-import me.rerere.rikkahub.ui.hooks.readBooleanPreference
-import me.rerere.rikkahub.ui.hooks.readStringPreference
 import me.rerere.rikkahub.ui.hooks.rememberCustomAsrState
 import me.rerere.rikkahub.ui.hooks.rememberCustomTtsState
 import me.rerere.rikkahub.ui.pages.assistant.AssistantPage
@@ -125,6 +123,7 @@ import me.rerere.rikkahub.ui.pages.setting.SettingMcpDetailPage
 import me.rerere.rikkahub.ui.pages.setting.SettingMcpPage
 import me.rerere.rikkahub.ui.pages.setting.SettingModelPage
 import me.rerere.rikkahub.ui.pages.setting.SettingPage
+import me.rerere.rikkahub.ui.pages.wechat.WeChatHomePage
 import me.rerere.rikkahub.ui.pages.setting.SettingProviderDetailPage
 import me.rerere.rikkahub.ui.pages.setting.SettingProviderPage
 import me.rerere.rikkahub.ui.pages.setting.SettingSearchDetailPage
@@ -291,16 +290,7 @@ class RouteActivity : ComponentActivity() {
         }
         val migrationState by DatabaseMigrationTracker.state.collectAsStateWithLifecycle()
 
-        val startScreen = Screen.Chat(
-            id = if (readBooleanPreference("create_new_conversation_on_start", true)) {
-                Uuid.random().toString()
-            } else {
-                readStringPreference(
-                    "lastConversationId",
-                    Uuid.random().toString()
-                ) ?: Uuid.random().toString()
-            }
-        )
+        val startScreen: Screen = Screen.WeChatHome
 
         val backStack = rememberNavBackStack(startScreen)
         SideEffect {
@@ -351,6 +341,10 @@ class RouteActivity : ComponentActivity() {
                                 slideOutHorizontally { it }
                         },
                         entryProvider = entryProvider {
+                            entry<Screen.WeChatHome> {
+                                WeChatHomePage()
+                            }
+
                             entry<Screen.Chat>(
                                 metadata = NavDisplay.transitionSpec { fadeIn() togetherWith fadeOut() }
                                     + NavDisplay.popTransitionSpec { fadeIn() togetherWith fadeOut() }
@@ -651,6 +645,10 @@ class RouteActivity : ComponentActivity() {
 }
 
 sealed interface Screen : NavKey {
+    /** 微信风格主界面，作为 App 启动页 */
+    @Serializable
+    data object WeChatHome : Screen
+
     @Serializable
     data class Chat(
         val id: String,

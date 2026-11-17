@@ -86,6 +86,7 @@ import org.koin.androidx.compose.koinViewModel
 import kotlin.math.roundToInt
 import kotlin.uuid.Uuid
 import me.rerere.rikkahub.ui.pages.assistant.detail.BackgroundPicker
+import me.rerere.rikkahub.ui.components.ui.CardGroup
 
 private val themeJson = Json {
     ignoreUnknownKeys = true

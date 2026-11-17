@@ -574,12 +574,14 @@ private fun MessagePartsBlock(
     }
 }
 
-private val BubbleCorner = 24.dp
-private val BubbleTailCorner = 6.dp
-private val BubblePressedCorner = 12.dp
+// 微信气泡是小圆角、几乎方方正正的观感；原来的 24dp 是 Material 风格，
+// 一眼就能看出不是微信。靠头像那侧的角再收紧一点，当作气泡的「尖」。
+private val BubbleCorner = 8.dp
+private val BubbleTailCorner = 2.dp
+private val BubblePressedCorner = 6.dp
 
 /**
- * 消息气泡：大圆角，靠头像一侧的顶角收紧；可点击时按下其余圆角也跟着收紧
+ * 消息气泡：小圆角，靠头像一侧的顶角收紧；可点击时按下其余圆角也跟着收紧
  */
 @Composable
 private fun ChatMessageBubble(

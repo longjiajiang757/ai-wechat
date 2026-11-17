@@ -67,8 +67,15 @@ import me.rerere.rikkahub.ui.components.message.ChatMessage
 import me.rerere.rikkahub.ui.components.ui.ErrorCardsDisplay
 import me.rerere.rikkahub.ui.hooks.ImeLazyListAutoScroller
 import me.rerere.rikkahub.ui.theme.ChatFontProvider
+import me.rerere.rikkahub.ui.pages.wechat.WeChatColors
 import me.rerere.rikkahub.utils.plus
 import me.rerere.ui.components.ListSelectableItem
+import kotlinx.datetime.toInstant
+import kotlinx.datetime.toLocalDateTime
+import kotlinx.datetime.atStartOfDay
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 
 private const val TAG = "ChatList"
 private const val LoadingIndicatorKey = "LoadingIndicator"
@@ -347,6 +354,10 @@ private fun ChatListNormal(
                 key = { index, item -> item.id },
             ) { index, node ->
                 Column {
+                    // 微信式时间分隔：距上一条超过 5 分钟才显示，避免每条都顶着时间
+                    if (shouldShowTimeDivider(conversation.messageNodes, index)) {
+                        ChatTimeDivider(node.currentMessage.createdAt)
+                    }
                     ListSelectableItem(
                         key = node.id,
                         onSelectChange = {
@@ -505,6 +516,74 @@ private fun ChatListNormal(
                     modifier = Modifier.align(Alignment.BottomCenter)
                 )
             }
+        }
+    }
+}
+
+/**
+ * 是否在这一条消息前显示时间。
+ *
+ * 微信的规则是「隔久了才显示」：第一条总是显示；
+ * 之后与上一条相差超过 5 分钟才插一条，否则一路聊下来满屏都是时间。
+ */
+private fun shouldShowTimeDivider(nodes: List<MessageNode>, index: Int): Boolean {
+    if (index == 0) return true
+    val current = nodes.getOrNull(index)?.currentMessage?.createdAt ?: return false
+    val previous = nodes.getOrNull(index - 1)?.currentMessage?.createdAt ?: return false
+    val zone = kotlinx.datetime.TimeZone.currentSystemDefault()
+    val diffSeconds = kotlin.math.abs(
+        current.toInstant(zone).epochSeconds - previous.toInstant(zone).epochSeconds
+    )
+    return diffSeconds >= 5 * 60
+}
+
+/** 微信式时间条：小字灰底胶囊，居中 */
+@Composable
+private fun ChatTimeDivider(time: kotlinx.datetime.LocalDateTime) {
+    val label = remember(time) { formatChatTime(time) }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.Center
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = WeChatColors.TextSecondary,
+            modifier = Modifier
+                .clip(RoundedCornerShape(4.dp))
+                .background(Color(0x14000000))
+                .padding(horizontal = 8.dp, vertical = 3.dp),
+        )
+    }
+}
+
+/**
+ * 时间文案：今天只显示时分，昨天显示「昨天 HH:mm」，更早显示「M月D日 HH:mm」。
+ *
+ * 全部用仓库里已在用的 datetime API：atStartOfDay(zone) 和 toInstant(zone)，
+ * 不碰 monthNumber / daysUntil 这类本项目没用过的成员，避免编译期才发现不存在。
+ * 日期文字直接从 ISO 字符串里切，纯字符串操作，没有 API 风险。
+ */
+private fun formatChatTime(time: kotlinx.datetime.LocalDateTime): String {
+    val zone = kotlinx.datetime.TimeZone.currentSystemDefault()
+    val now = kotlinx.datetime.Clock.System.now().toLocalDateTime(zone)
+    val hhmm = "%02d:%02d".format(time.hour, time.minute)
+
+    val msgEpoch = time.toInstant(zone).epochSeconds
+    val todayStart = now.date.atStartOfDay(zone).toInstant(zone).epochSeconds
+    val yesterdayStart = todayStart - 86_400L
+
+    return when {
+        msgEpoch >= todayStart -> hhmm
+        msgEpoch >= yesterdayStart -> "昨天 $hhmm"
+        else -> {
+            // ISO 形如 2026-11-17，切出月日即可
+            val parts = time.date.toString().split('-')
+            val month = parts.getOrNull(1)?.toIntOrNull()
+            val day = parts.getOrNull(2)?.toIntOrNull()
+            if (month != null && day != null) "${month}月${day}日 $hhmm" else hhmm
         }
     }
 }

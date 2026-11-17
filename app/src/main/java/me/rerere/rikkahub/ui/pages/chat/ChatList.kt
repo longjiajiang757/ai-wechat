@@ -67,12 +67,12 @@ import me.rerere.rikkahub.ui.hooks.ImeLazyListAutoScroller
 import me.rerere.rikkahub.ui.theme.ChatFontProvider
 import me.rerere.rikkahub.ui.pages.wechat.WeChatColors
 import me.rerere.ui.components.ListSelectableItem
-import kotlinx.datetime.toInstant
 import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import me.rerere.rikkahub.utils.plus
 
 private const val TAG = "ChatList"
 private const val LoadingIndicatorKey = "LoadingIndicator"
@@ -559,7 +559,7 @@ private fun ChatTimeDivider(time: kotlinx.datetime.LocalDateTime) {
             color = WeChatColors.TextSecondary,
             modifier = Modifier
                 .clip(RoundedCornerShape(4.dp))
-                .background(Color(0x14000000))
+                .background(Color(0x14000000L))
                 .padding(horizontal = 8.dp, vertical = 3.dp),
         )
     }

@@ -15,7 +15,8 @@
   <string name="about_page_system">System</string>
   <string name="about_page_title">Über</string>
   <string name="about_page_version">Version</string>
-  <string name="about_page_website">Website</string>
+  <string name="about_page_download">Download</string>
+  <string name="about_page_upstream">Ursprungsprojekt</string>
   <string name="add">Hinzufügen</string>
   <string name="app_name">AI agent</string>
   <string name="asr_button_content_description">Spracherkennung</string>
@@ -306,6 +307,18 @@
   <string name="deep_thinking">Tiefes Denken</string>
   <string name="deep_thinking_seconds">%1$.1f Sekunden nachgedacht</string>
   <string name="delete">Löschen</string>
+  <string name="donate_page_title">Unterstützen</string>
+  <string name="donate_page_author_group">Autor</string>
+  <string name="donate_page_author_subtitle">Betreuer von AI agent</string>
+  <string name="donate_page_author_name_desc">Autor dieses Builds</string>
+  <string name="donate_page_qq_desc">Zum Kopieren tippen, dann in QQ suchen</string>
+  <string name="donate_page_qq_copied">QQ-Nummer kopiert</string>
+  <string name="donate_page_links_group">Links</string>
+  <string name="donate_page_repo">Projekt-Repository</string>
+  <string name="donate_page_upstream">UI und Kern von RikkaHub</string>
+  <string name="donate_page_download">Neueste laden</string>
+  <string name="donate_page_download_desc">Releases-Seite öffnen</string>
+  <string name="donate_page_apk_hint">Fester Download-Link (wird automatisch aktualisiert):</string>
   <string name="donate_page_afdian_desc">Für 🇨🇳 Nutzer</string>
   <string name="donate_page_donation_methods">Spendenmethoden</string>
   <string name="donate_page_kofi_desc">Für internationale Nutzer</string>
@@ -349,7 +362,6 @@
   <string name="imggen_page_cancel">Abbrechen</string>
   <string name="imggen_page_cancel_generation_message">Möchtest du die Bildgenerierung wirklich abbrechen?</string>
   <string name="imggen_page_cancel_generation_title">Generierung abbrechen</string>
-  <string name="donate_page_title">Spenden</string>
   <string name="edit">Bearbeiten</string>
   <string name="editing">Bearbeitung</string>
   <string name="emoji_picker_search_placeholder">Emojis suchen...</string>
@@ -814,8 +826,8 @@
   <string name="setting_page_preferences_network_auto_retry_desc">Modellanfragen bei Netzwerkfehlern bis zu 3-mal wiederholen.</string>
   <string name="setting_page_documentation">Dokumentation</string>
   <string name="setting_page_documentation_desc">Anweisungen zur App-Nutzung und Hilfedokumentation anzeigen</string>
-  <string name="setting_page_donate">Spenden</string>
-  <string name="setting_page_donate_desc">Wenn es dir gefällt, unterstütze die Arbeit des Autors</string>
+  <string name="setting_page_donate">Unterstützen</string>
+  <string name="setting_page_donate_desc">Autor, Repository und Kontakt</string>
   <string name="setting_page_dynamic_color">Dynamische Farben</string>
   <string name="setting_page_dynamic_color_desc">Erzeuge die Designfarben der App dynamisch aus deinem Hintergrundbild</string>
   <string name="setting_page_extensions">Erweiterungen</string>

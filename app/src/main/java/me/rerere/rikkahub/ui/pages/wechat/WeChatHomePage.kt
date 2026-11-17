@@ -54,6 +54,15 @@ import org.koin.androidx.compose.koinViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.layout.Arrangement
+import me.rerere.rikkahub.ui.context.LocalSettings
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import me.rerere.hugeicons.stroke.Add01
 
 /**
  * 微信风格的四栏主界面。
@@ -298,11 +307,21 @@ private fun WeChatContactsTab(viewModel: WeChatHomeVM) {
     val navController = LocalNavController.current
 
     if (assistants.isEmpty()) {
-        EmptyHint(title = "还没有角色", subtitle = "去设置里新建一个角色")
+        // 新装用户第一眼看到的就是这里，光写「去设置里新建」等于没说：
+        // 用户根本不知道设置里哪一项。直接给一个能点的按钮，一步到新建页。
+        EmptyAssistantGuide(
+            onAdd = { navController.navigate(me.rerere.rikkahub.Screen.Assistant) }
+        )
         return
     }
 
     LazyColumn(modifier = Modifier.fillMaxSize()) {
+        item(key = "__add_assistant__") {
+            AddAssistantRow(
+                onClick = { navController.navigate(me.rerere.rikkahub.Screen.Assistant) }
+            )
+            HorizontalDivider(modifier = Modifier.padding(start = 76.dp), thickness = 0.5.dp, color = WeChatColors.Divider)
+        }
         items(items = assistants, key = { it.id.toString() }) { assistant ->
             ContactRow(
                 assistant = assistant,
@@ -318,6 +337,79 @@ private fun WeChatContactsTab(viewModel: WeChatHomeVM) {
                 color = WeChatColors.Divider
             )
         }
+    }
+}
+
+/**
+ * 还没有角色时的引导页。
+ *
+ * 新装用户第一眼就是这里。原来只写一行「去设置里新建一个角色」，
+ * 可用户既不知道设置在哪里，也不知道设置里哪一项，等于把人卡死在第一步。
+ * 这里直接给一个绿色主按钮，点了就进角色列表页，那里有「+」。
+ */
+@Composable
+private fun EmptyAssistantGuide(onAdd: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(
+            text = "还没有角色",
+            style = MaterialTheme.typography.titleMedium,
+            color = WeChatColors.TextPrimary
+        )
+        Spacer(Modifier.height(8.dp))
+        Text(
+            text = "角色就是你要聊的那个人：给她起个名字、写一段人设、换个头像。",
+            style = MaterialTheme.typography.bodySmall,
+            color = WeChatColors.TextSecondary,
+            textAlign = TextAlign.Center
+        )
+        Spacer(Modifier.height(20.dp))
+        Button(
+            onClick = onAdd,
+            colors = ButtonDefaults.buttonColors(containerColor = WeChatColors.Green),
+            shape = RoundedCornerShape(8.dp)
+        ) {
+            Text("新建角色", color = Color.White)
+        }
+    }
+}
+
+/** 有角色时列表顶部的新增入口，微信里就是「新的朋友」那一行的位置 */
+@Composable
+private fun AddAssistantRow(onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .background(WeChatColors.ListBackground)
+            .padding(horizontal = 16.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(48.dp)
+                .clip(RoundedCornerShape(6.dp))
+                .background(Color(0xFFF0F0F0)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = HugeIcons.Add01,
+                contentDescription = null,
+                tint = WeChatColors.Green,
+                modifier = Modifier.size(26.dp)
+            )
+        }
+        Spacer(Modifier.width(12.dp))
+        Text(
+            text = "新建角色",
+            style = MaterialTheme.typography.bodyLarge,
+            color = WeChatColors.TextPrimary
+        )
     }
 }
 
@@ -480,27 +572,83 @@ private fun DiscoverEntry(title: String, subtitle: String, onClick: () -> Unit) 
     }
 }
 
-/** 我 tab：设置入口 */
+/**
+ * 我 tab。
+ *
+ * 顶部放作者信息（头像 + 名字 + QQ），下面是功能入口。
+ * 之前这里只有「设置」「支持」两项，角色管理藏在设置的三级菜单里，
+ * 用户加完服务商之后完全找不到新建角色的地方，所以把「角色管理」提到这一层。
+ */
 @Composable
 private fun WeChatMeTab() {
     val navController = LocalNavController.current
-    Column(modifier = Modifier.fillMaxSize()) {
+    val settings = LocalSettings.current
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .background(WeChatColors.ListBackground)
+    ) {
+        // 头部：和微信「我」一样，一块浅色区域放头像和名字
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(WeChatColors.ListBackground)
+                .padding(horizontal = 16.dp, vertical = 24.dp)
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                UIAvatar(
+                    name = settings.userNickname.ifBlank { "我" },
+                    value = settings.userAvatar,
+                    modifier = Modifier
+                        .size(60.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                )
+                Spacer(Modifier.width(14.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = settings.userNickname.ifBlank { "我" },
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = WeChatColors.TextPrimary
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        text = "AI agent · 嘉酱",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = WeChatColors.TextSecondary
+                    )
+                }
+            }
+            Spacer(Modifier.height(10.dp))
+            Text(
+                text = "QQ 2924574099",
+                style = MaterialTheme.typography.bodySmall,
+                color = WeChatColors.TextSecondary
+            )
+        }
+
+        HorizontalDivider(color = WeChatColors.Divider, thickness = 8.dp)
+
+        DiscoverEntry(
+            title = "角色管理",
+            subtitle = "新建、编辑人设和头像",
+            onClick = { navController.navigate(me.rerere.rikkahub.Screen.Assistant) }
+        )
+        HorizontalDivider(modifier = Modifier.padding(start = 16.dp), color = WeChatColors.Divider, thickness = 0.5.dp)
         DiscoverEntry(
             title = "设置",
-            subtitle = "模型、API Key、外观",
-            onClick = {
-                navController.navigate(me.rerere.rikkahub.Screen.Setting)
-            }
+            subtitle = "服务商、API Key、外观",
+            onClick = { navController.navigate(me.rerere.rikkahub.Screen.Setting) }
         )
-        HorizontalDivider(color = WeChatColors.Divider, thickness = 0.5.dp)
+        HorizontalDivider(modifier = Modifier.padding(start = 16.dp), color = WeChatColors.Divider, thickness = 0.5.dp)
         DiscoverEntry(
             title = "支持",
             subtitle = "作者信息与下载地址",
-            onClick = {
-                navController.navigate(me.rerere.rikkahub.Screen.SettingDonate)
-            }
+            onClick = { navController.navigate(me.rerere.rikkahub.Screen.SettingDonate) }
         )
-        HorizontalDivider(color = WeChatColors.Divider, thickness = 0.5.dp)
+        HorizontalDivider(color = WeChatColors.Divider, thickness = 8.dp)
+        Spacer(Modifier.height(24.dp))
     }
 }
 

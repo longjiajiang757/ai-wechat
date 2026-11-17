@@ -501,6 +501,8 @@ private fun ModelList(
         }
     }
     var expanded by rememberSaveable { mutableStateOf(true) }
+    // 手动加模型：不依赖远端列表，没填 Key 也能先把模型建出来
+    var manualAdd by remember { mutableStateOf(false) }
     val lazyListState = rememberLazyListState()
     val reorderableLazyListState = rememberReorderableLazyListState(lazyListState) { from, to ->
         onUpdateProvider(providerSetting.moveMove(from.index, to.index))
@@ -510,7 +512,9 @@ private fun ModelList(
         if (providerSetting.models.isEmpty()) {
             ExtensionEmptyState(
                 message = stringResource(R.string.setting_provider_page_no_models),
-                description = stringResource(R.string.setting_provider_page_add_models_hint),
+                description = "点下面的按钮直接填模型 ID 就行，不需要先联网拉列表。",
+                buttonText = "手动添加模型",
+                onAction = { manualAdd = true },
                 icon = HugeIcons.Package01,
             )
         } else {
@@ -546,6 +550,22 @@ private fun ModelList(
                     }
                 }
             }
+        }
+        if (manualAdd) {
+            ManualModelDialog(
+                onDismiss = { manualAdd = false },
+                onConfirm = { modelId ->
+                    onUpdateProvider(
+                        providerSetting.addModel(
+                            Model(
+                                modelId = modelId,
+                                displayName = modelId,
+                            )
+                        )
+                    )
+                    manualAdd = false
+                },
+            )
         }
         HorizontalFloatingToolbar(
             expanded = expanded,
@@ -1652,4 +1672,52 @@ private fun ProviderOverrideSettings(
             }
         }
     }
+}
+
+/**
+ * 手动添加模型。
+ *
+ * 原来的流程只能从服务商远程拉列表里挑，可列表要拿着 Key 去请求才能拿到，
+ * 没填好 Key 就一个模型都看不到，于是「添加服务商之后根本找不到创建模型的地方」。
+ * 这里只要一个模型 ID，其他字段用默认值，先把模型建出来，能力可以之后再补。
+ */
+@Composable
+private fun ManualModelDialog(
+    onDismiss: () -> Unit,
+    onConfirm: (String) -> Unit,
+) {
+    var modelId by remember { mutableStateOf("") }
+    val trimmed = modelId.trim()
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("手动添加模型") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = "填服务商文档里写的模型 ID，比如 deepseek-chat、gpt-4o、moonshot-v1-8k。",
+                    style = MaterialTheme.typography.bodySmall,
+                )
+                OutlinedTextField(
+                    value = modelId,
+                    onValueChange = { modelId = it },
+                    label = { Text("模型 ID") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { onConfirm(trimmed) },
+                enabled = trimmed.isNotEmpty(),
+            ) {
+                Text("添加")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("取消")
+            }
+        },
+    )
 }

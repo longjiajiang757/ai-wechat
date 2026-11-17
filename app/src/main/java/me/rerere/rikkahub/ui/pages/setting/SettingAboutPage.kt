@@ -62,11 +62,21 @@ import me.rerere.rikkahub.utils.SoundEffectPlayer
 import me.rerere.rikkahub.utils.openUrl
 import me.rerere.rikkahub.utils.plus
 import me.rerere.ui.easteregg.EmojiBurstHost
+import android.content.ClipData
+import android.content.ClipEntry
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalClipboard
+import kotlinx.coroutines.launch
+import me.rerere.hugeicons.stroke.UserCircle
+import me.rerere.hugeicons.stroke.Message01
+import androidx.compose.runtime.rememberCoroutineScope
 
 @Composable
 fun SettingAboutPage() {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val context = LocalContext.current
+    val clipboardManager = LocalClipboard.current
+    val scope = rememberCoroutineScope()
     val navController = LocalNavController.current
     val soundOptions = remember { listOf(R.raw.bingbingbing, R.raw.gangguan) }
     val soundEffectPlayer = remember(context) { SoundEffectPlayer(context) }
@@ -195,6 +205,29 @@ fun SettingAboutPage() {
                                 Text("${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL} / Android ${android.os.Build.VERSION.RELEASE} / SDK ${android.os.Build.VERSION.SDK_INT}")
                             },
                             headlineContent = { Text(stringResource(R.string.about_page_system)) },
+                        )
+                    }
+                }
+
+                item {
+                    val containerColor = MaterialTheme.colorScheme.secondaryContainer
+                    val contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                    CardGroup {
+                        item(
+                            leadingContent = { CardGroupIcon(HugeIcons.UserCircle, containerColor = containerColor, contentColor = contentColor) },
+                            supportingContent = { Text("嘉酱") },
+                            headlineContent = { Text("作者") },
+                        )
+                        item(
+                            onClick = {
+                                clipboardManager.setClipEntry(ClipEntry(ClipData.newPlainText("QQ", "2924574099")))
+                                scope.launch {
+                                    Toast.makeText(context, "QQ 号已复制", Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                            leadingContent = { CardGroupIcon(HugeIcons.Message01, containerColor = containerColor, contentColor = contentColor) },
+                            supportingContent = { Text("点一下复制") },
+                            headlineContent = { Text("QQ 2924574099") },
                         )
                     }
                 }

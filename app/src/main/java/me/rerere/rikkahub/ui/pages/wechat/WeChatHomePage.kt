@@ -289,7 +289,7 @@ private fun ConversationRow(
 /**
  * 通讯录 tab：把每个角色当成一个「联系人」。
  *
- * 点进去打开角色的人设编辑页（复用上游 AssistantDetail），
+ * 点进去打开微信风格的角色资料页（头像/昵称/人设），
  * 在那里可以改头像、名字、人设提示词——这就是「人机恋」里对面 AI 的形象设置入口。
  */
 @Composable
@@ -308,7 +308,7 @@ private fun WeChatContactsTab(viewModel: WeChatHomeVM) {
                 assistant = assistant,
                 onClick = {
                     navController.navigate(
-                        me.rerere.rikkahub.Screen.AssistantDetail(id = assistant.id.toString())
+                        me.rerere.rikkahub.Screen.WeChatAssistantProfile(id = assistant.id.toString())
                     )
                 }
             )

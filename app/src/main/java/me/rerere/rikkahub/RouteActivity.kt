@@ -125,6 +125,7 @@ import me.rerere.rikkahub.ui.pages.setting.SettingModelPage
 import me.rerere.rikkahub.ui.pages.setting.SettingPage
 import me.rerere.rikkahub.ui.pages.wechat.WeChatAssistantProfilePage
 import me.rerere.rikkahub.ui.pages.wechat.WeChatHomePage
+import me.rerere.rikkahub.ui.pages.wechat.WeChatMemoryPage
 import me.rerere.rikkahub.ui.pages.setting.SettingProviderDetailPage
 import me.rerere.rikkahub.ui.pages.setting.SettingProviderPage
 import me.rerere.rikkahub.ui.pages.setting.SettingSearchDetailPage
@@ -348,6 +349,10 @@ class RouteActivity : ComponentActivity() {
 
                             entry<Screen.WeChatAssistantProfile> { key ->
                                 WeChatAssistantProfilePage(key.id)
+                            }
+
+                            entry<Screen.WeChatMemory> { key ->
+                                WeChatMemoryPage(key.id)
                             }
 
                             entry<Screen.Chat>(
@@ -657,6 +662,10 @@ sealed interface Screen : NavKey {
     /** 微信风格的角色资料页（头像/昵称/人设） */
     @Serializable
     data class WeChatAssistantProfile(val id: String) : Screen
+
+    /** 微信风格的记忆星海 */
+    @Serializable
+    data class WeChatMemory(val id: String) : Screen
 
     @Serializable
     data class Chat(

@@ -206,7 +206,7 @@ fun WeChatAssistantProfilePage(id: String) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable {
-                        navController.navigate(Screen.AssistantMemory(id = assistant.id.toString()))
+                        navController.navigate(Screen.WeChatMemory(id = assistant.id.toString()))
                     }
                     .padding(horizontal = 16.dp, vertical = 16.dp),
                 verticalAlignment = Alignment.CenterVertically

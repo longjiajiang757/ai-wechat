@@ -379,7 +379,7 @@ private fun WeChatDiscoverTab(viewModel: WeChatHomeVM) {
                 when {
                     assistants.isEmpty() -> Unit
                     assistants.size == 1 -> navController.navigate(
-                        me.rerere.rikkahub.Screen.AssistantMemory(id = assistants.first().id.toString())
+                        me.rerere.rikkahub.Screen.WeChatMemory(id = assistants.first().id.toString())
                     )
                     else -> pendingMemoryPick = true
                 }
@@ -396,7 +396,7 @@ private fun WeChatDiscoverTab(viewModel: WeChatHomeVM) {
             onPick = { assistant ->
                 pendingMemoryPick = false
                 navController.navigate(
-                    me.rerere.rikkahub.Screen.AssistantMemory(id = assistant.id.toString())
+                    me.rerere.rikkahub.Screen.WeChatMemory(id = assistant.id.toString())
                 )
             }
         )

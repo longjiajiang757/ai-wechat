@@ -72,7 +72,6 @@ import me.rerere.rikkahub.utils.plus
 import me.rerere.ui.components.ListSelectableItem
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
-import kotlinx.datetime.atStartOfDay
 import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
@@ -531,10 +530,11 @@ private fun shouldShowTimeDivider(nodes: List<MessageNode>, index: Int): Boolean
     val current = nodes.getOrNull(index)?.currentMessage?.createdAt ?: return false
     val previous = nodes.getOrNull(index - 1)?.currentMessage?.createdAt ?: return false
     val zone = kotlinx.datetime.TimeZone.currentSystemDefault()
-    val diffSeconds = kotlin.math.abs(
-        current.toInstant(zone).epochSeconds - previous.toInstant(zone).epochSeconds
+    // 用毫秒差，toEpochMilliseconds 在 MemoryConsolidator 里有先例；epochSeconds 本项目没用过
+    val diffMillis = kotlin.math.abs(
+        current.toInstant(zone).toEpochMilliseconds() - previous.toInstant(zone).toEpochMilliseconds()
     )
-    return diffSeconds >= 5 * 60
+    return diffMillis >= 5 * 60 * 1000L
 }
 
 /** 微信式时间条：小字灰底胶囊，居中 */
@@ -562,25 +562,32 @@ private fun ChatTimeDivider(time: kotlinx.datetime.LocalDateTime) {
 /**
  * 时间文案：今天只显示时分，昨天显示「昨天 HH:mm」，更早显示「M月D日 HH:mm」。
  *
- * 全部用仓库里已在用的 datetime API：atStartOfDay(zone) 和 toInstant(zone)，
- * 不碰 monthNumber / daysUntil 这类本项目没用过的成员，避免编译期才发现不存在。
- * 日期文字直接从 ISO 字符串里切，纯字符串操作，没有 API 风险。
+ * 判断「今天/昨天」不用 atStartOfDay——那是个容易记错名字的扩展函数，
+ * 这里直接用 ISO 日期字符串比较：time.date.toString() 有仓库先例（ConversationTools），
+ * 今天的日期串直接和 now.date.toString() 比，昨天用 epoch 差一天回推，全是纯字符串和整数运算。
  */
 private fun formatChatTime(time: kotlinx.datetime.LocalDateTime): String {
     val zone = kotlinx.datetime.TimeZone.currentSystemDefault()
     val now = kotlinx.datetime.Clock.System.now().toLocalDateTime(zone)
     val hhmm = "%02d:%02d".format(time.hour, time.minute)
 
-    val msgEpoch = time.toInstant(zone).epochSeconds
-    val todayStart = now.date.atStartOfDay(zone).toInstant(zone).epochSeconds
-    val yesterdayStart = todayStart - 86_400L
+    val msgDate = time.date.toString()
+    val todayDate = now.date.toString()
 
-    return when {
-        msgEpoch >= todayStart -> hhmm
-        msgEpoch >= yesterdayStart -> "昨天 $hhmm"
+    // 昨天的日期串：拿现在的毫秒数减一天，再转回本地日期。
+    // fromEpochMilliseconds(...).toLocalDateTime(...) 这套写法在 ChatboxImporter 里有先例。
+    val yesterdayDate = kotlin.time.Instant
+        .fromEpochMilliseconds(now.toInstant(zone).toEpochMilliseconds() - 86_400_000L)
+        .toLocalDateTime(zone)
+        .date
+        .toString()
+
+    return when (msgDate) {
+        todayDate -> hhmm
+        yesterdayDate -> "昨天 $hhmm"
         else -> {
-            // ISO 形如 2026-11-17，切出月日即可
-            val parts = time.date.toString().split('-')
+            // ISO 形如 2026-11-17，切出月日
+            val parts = msgDate.split('-')
             val month = parts.getOrNull(1)?.toIntOrNull()
             val day = parts.getOrNull(2)?.toIntOrNull()
             if (month != null && day != null) "${month}月${day}日 $hhmm" else hhmm

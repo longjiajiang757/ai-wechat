@@ -57,6 +57,30 @@ private inline fun <reified T> json(
     decode = { JsonInstant.decodeFromString<T>(it) },
 )
 
+
+/**
+ * 存成 JSON 字符串，并对内容做敏感的字段加密/解密。
+ *
+ * 目前只有 `providers` 用：它里面的 `apiKey` 不能明文落盘。
+ * 加密只发生在写盘那一刻，内存里的 `Settings` 永远是明文，
+ * 界面和请求代码都不需要知道这件事。
+ */
+private inline fun <reified T> jsonEncrypted(
+    key: Preferences.Key<String>,
+    property: KProperty1<Settings, T>,
+    noinline set: Settings.(T) -> Settings,
+    noinline encrypt: (T) -> T,
+    noinline decrypt: (T) -> T,
+) = SettingsField(
+    key,
+    property,
+    set,
+    // 写盘：先加密再序列化
+    encode = { JsonInstant.encodeToString(encrypt(it)) },
+    // 读盘：先反序列化再解密
+    decode = { JsonInstant.decodeFromString<T>(it).let(decrypt) },
+)
+
 private fun uuid(
     key: Preferences.Key<String>,
     property: KProperty1<Settings, Uuid>,
@@ -121,7 +145,14 @@ internal val SETTINGS_FIELDS: List<SettingsField<*, *>> = with(SettingsStore) {
         plain(AUTO_COMPRESS_THRESHOLD, Settings::autoCompressThreshold) { copy(autoCompressThreshold = it) },
 
         // 提供商
-        json(PROVIDERS, Settings::providers) { copy(providers = it) },
+        // API Key 加密落盘：写盘加密、读盘解密，内存里始终是明文
+        jsonEncrypted(
+            PROVIDERS,
+            Settings::providers,
+            set = { copy(providers = it) },
+            encrypt = { ProviderSecretCodec.encryptAll(it) },
+            decrypt = { ProviderSecretCodec.decryptAll(it) },
+        ),
 
         // 助手
         uuid(SELECT_ASSISTANT, Settings::assistantId) { copy(assistantId = it) },

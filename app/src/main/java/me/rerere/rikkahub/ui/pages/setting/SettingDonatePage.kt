@@ -44,7 +44,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import me.rerere.hugeicons.stroke.MusicNote01
+import me.rerere.hugeicons.stroke.MusicNote03
 import me.rerere.hugeicons.stroke.Delete02
 
 /** 作者名 */
@@ -282,7 +282,7 @@ private fun BootSoundCardGroup(context: Context) {
             onClick = { picker.launch("audio/*") },
             leadingContent = {
                 CardGroupIcon(
-                    icon = HugeIcons.MusicNote01,
+                    icon = HugeIcons.MusicNote03,
                     containerColor = MaterialTheme.colorScheme.secondaryContainer,
                     contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                 )

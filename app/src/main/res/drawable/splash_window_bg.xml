@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  启动窗口背景：整张竖图居中裁切铺满，底下垫一层平均色。
-  图片按 centerCrop 缩放，窄屏和宽屏都能铺满，不会露出白边。
+  启动窗口背景：先垫一层平均色，再把整张图按原比例居中放上去。
+  注意 layer-list 里的 bitmap 只认 gravity 的对齐值（center/fill/...），
+  写 centerCrop 会直接链接失败。
 -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item>
@@ -9,7 +10,7 @@
     </item>
     <item>
         <bitmap
-            android:gravity="centerCrop"
+            android:gravity="center"
             android:src="@drawable/splash_bg" />
     </item>
 </layer-list>

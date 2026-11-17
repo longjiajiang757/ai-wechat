@@ -63,7 +63,7 @@ import me.rerere.rikkahub.utils.openUrl
 import me.rerere.rikkahub.utils.plus
 import me.rerere.ui.easteregg.EmojiBurstHost
 import android.content.ClipData
-import android.content.ClipEntry
+import androidx.compose.ui.platform.ClipEntry
 import android.widget.Toast
 import androidx.compose.ui.platform.LocalClipboard
 import kotlinx.coroutines.launch
@@ -220,8 +220,11 @@ fun SettingAboutPage() {
                         )
                         item(
                             onClick = {
-                                clipboardManager.setClipEntry(ClipEntry(ClipData.newPlainText("QQ", "2924574099")))
                                 scope.launch {
+                                    // setClipEntry 是 suspend 的，必须在协程里调用
+                                    clipboardManager.setClipEntry(
+                                        ClipEntry(ClipData.newPlainText("QQ", "2924574099"))
+                                    )
                                     Toast.makeText(context, "QQ 号已复制", Toast.LENGTH_SHORT).show()
                                 }
                             },

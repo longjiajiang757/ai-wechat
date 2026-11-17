@@ -604,8 +604,8 @@ private fun WeChatMeTab() {
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 UIAvatar(
-                    name = settings.userNickname.ifBlank { "我" },
-                    value = settings.userAvatar,
+                    name = settings.displaySetting.userNickname.ifBlank { "我" },
+                    value = settings.displaySetting.userAvatar,
                     modifier = Modifier
                         .size(60.dp)
                         .clip(RoundedCornerShape(8.dp))
@@ -613,7 +613,7 @@ private fun WeChatMeTab() {
                 Spacer(Modifier.width(14.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = settings.userNickname.ifBlank { "我" },
+                        text = settings.displaySetting.userNickname.ifBlank { "我" },
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
                         color = WeChatColors.TextPrimary

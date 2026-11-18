@@ -66,8 +66,13 @@ jobs:
         run: |
           V=$(grep -m1 'versionName = ' app/build.gradle.kts | sed 's/.*"\(.*\)".*/\1/')
           if [ -z "$V" ]; then echo "读不到 versionName" >&2; exit 1; fi
-          echo "name=$V" >> "$GITHUB_OUTPUT"
-          echo "release 名称（=App 更新检查的版本号）: $V"
+          # App 的版本比较器只认数字段："1.1 Beta" 里 "1 Beta" 解析失败兜底成 0，
+          # 和 "1.0 Beta" 比出来相等，更新永远不触发。
+          # 所以 release name 只写数字前缀（1.0 Beta → 1.0），UI 显示用得上。
+          N=$(echo "$V" | grep -oE '^[0-9]+(\.[0-9]+)*')
+          if [ -z "$N" ]; then echo "versionName 里找不到数字版本: $V" >&2; exit 1; fi
+          echo "name=$N" >> "$GITHUB_OUTPUT"
+          echo "release 名称（=App 更新检查用的版本号）: $N  （versionName: $V）"
 
       # JVM 单元测试先跑：插件表、密钥判定、版本比较这些纯逻辑出问题，
       # 在这一步就拦下，不用等装到手机上才发现。

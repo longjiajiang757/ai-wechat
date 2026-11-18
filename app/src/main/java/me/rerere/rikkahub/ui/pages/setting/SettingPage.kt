@@ -82,6 +82,7 @@ import me.rerere.rikkahub.ui.theme.CustomColors
 import me.rerere.rikkahub.utils.plus
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
+import androidx.compose.ui.graphics.vector.ImageVector
 
 @Composable
 fun SettingPage(vm: SettingVM = koinViewModel()) {

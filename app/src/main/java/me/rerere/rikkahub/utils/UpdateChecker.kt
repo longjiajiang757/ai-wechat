@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import me.rerere.common.http.await
@@ -21,7 +22,9 @@ import me.rerere.rikkahub.BuildConfig
 import okhttp3.OkHttpClient
 import okhttp3.Request
 
-private const val API_URL = "https://updates.rikka-ai.com/"
+// 更新源指向我们自己的仓库（固定 tag "latest"，每次 CI 构建后覆盖发布）。
+// 不用上游 rikka-ai.com：那边推的是 RikkaHub 官方版，用户装了会误以为有新版。
+private const val REPO_API = "https://api.github.com/repos/longjiajiang757/ai-wechat/releases/tags/latest"
 
 class UpdateChecker(
     private val client: OkHttpClient,
@@ -42,19 +45,35 @@ class UpdateChecker(
                 data = try {
                     val response = client.newCall(
                         Request.Builder()
-                            .url(API_URL)
+                            .url(REPO_API)
                             .get()
                             .addHeader(
                                 "User-Agent",
-                                "RikkaHub ${BuildConfig.VERSION_NAME} #${BuildConfig.VERSION_CODE}"
+                                "AI-agent ${BuildConfig.VERSION_NAME} #${BuildConfig.VERSION_CODE}"
                             )
                             .build()
                     ).await()
-                    if (response.isSuccessful) {
-                        json.decodeFromString<UpdateInfo>(response.body.string())
-                    } else {
+                    if (!response.isSuccessful) {
                         throw Exception("Failed to fetch update info")
                     }
+                    // GitHub 的 release JSON 结构和上游更新服务的格式不一样，
+                    // 在这里转一次，UI 层不用动。
+                    val release = json.decodeFromString<GithubRelease>(response.body.string())
+                    UpdateInfo(
+                        // tag 固定是 "latest" 没有版本信息，真实版本号是 CI 写进 name 的。
+                        // name 可能是 "1.0 Beta" 这种带文案的，只取数字段比较，
+                        // 展示用原文。
+                        version = release.name.removePrefix("v").trim(),
+                        publishedAt = release.publishedAt,
+                        changelog = release.body,
+                        downloads = release.assets.map { asset ->
+                            UpdateDownload(
+                                name = asset.name,
+                                url = asset.browserDownloadUrl,
+                                size = formatSize(asset.size),
+                            )
+                        },
+                    )
                 } catch (e: Exception) {
                     throw Exception("Failed to fetch update info", e)
                 }
@@ -193,3 +212,33 @@ private data class ParsedVersion(
 // 扩展操作符函数，使比较更直观
 operator fun String.compareTo(other: Version): Int = Version(this).compareTo(other)
 operator fun Version.compareTo(other: String): Int = this.compareTo(Version(other))
+
+/**
+ * GitHub release API 里我们关心的字段。
+ *
+ * 只声明用到的，ignoreUnknownKeys 兜住其余几十个字段。
+ * tag 是 "latest" 固定值，真实版本从 name 里拿
+ * （CI 发布时 name 写成版本号，比如 "1.1 Beta"）。
+ */
+@Serializable
+private data class GithubRelease(
+    @SerialName("tag_name") val tagName: String,
+    val name: String,
+    @SerialName("published_at") val publishedAt: String,
+    val body: String = "",
+    val assets: List<GithubAsset> = emptyList(),
+)
+
+@Serializable
+private data class GithubAsset(
+    val name: String,
+    val size: Long,
+    @SerialName("browser_download_url") val browserDownloadUrl: String,
+)
+
+/** 把字节数变成人话：18.9 MB */
+private fun formatSize(bytes: Long): String = when {
+    bytes >= 1_000_000 -> String.format("%.1f MB", bytes / 1_000_000.0)
+    bytes >= 1_000 -> String.format("%.0f KB", bytes / 1_000.0)
+    else -> "$bytes B"
+}

@@ -61,6 +61,14 @@ jobs:
       # 不需要配置任何 secret：
       # - Firebase 已移除，不需要 google-services.json
       # - 签名密钥 app/ai-wechat.jks 已随仓库提交
+      - name: Read versionName
+        id: version
+        run: |
+          V=$(grep -m1 'versionName = ' app/build.gradle.kts | sed 's/.*"\(.*\)".*/\1/')
+          if [ -z "$V" ]; then echo "读不到 versionName" >&2; exit 1; fi
+          echo "name=$V" >> "$GITHUB_OUTPUT"
+          echo "release 名称（=App 更新检查的版本号）: $V"
+
       - name: Gradle Build
         run: |
           chmod +x gradlew
@@ -110,7 +118,9 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: latest
-          name: AI 微信（最新版）
+          # App 的更新检查读这个 name 当版本号（UpdateChecker 从 release.name 解析），
+          # 必须保持就是 versionName 本身，前后不要加别的文字。
+          name: ${{ steps.version.outputs.name }}
           body: |
             **直接下载（手机浏览器打开即可，不用登录）**
 

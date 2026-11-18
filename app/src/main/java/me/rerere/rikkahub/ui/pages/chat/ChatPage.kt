@@ -107,6 +107,8 @@ import org.koin.compose.koinInject
 import org.koin.core.parameter.parametersOf
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.uuid.Uuid
+import androidx.compose.ui.Alignment
+import me.rerere.rikkahub.ui.pages.wechat.OnboardingGuideHost
 
 @Composable
 fun ChatPage(id: Uuid, text: String?, files: List<Uri>, nodeId: Uuid? = null) {
@@ -459,6 +461,9 @@ private fun ChatPageContent(
             },
             containerColor = Color.Transparent,
         ) { innerPadding ->
+            // 聊天列表和新手向导叠在同一个 Box 里：向导卡贴底居中，
+            // 浮在输入栏上方（Scaffold 的 content 本身不是 BoxScope，得自己包一层）。
+            Box(modifier = Modifier.fillMaxSize()) {
             ChatList(
                 innerPadding = innerPadding,
                 conversation = conversation,
@@ -527,6 +532,16 @@ private fun ChatPageContent(
                     vm.updateConversationSystemPrompt(newPrompt)
                 },
             )
+
+                // 新手向导：贴在聊天页底部的进度卡，配好 Key+角色（或点 X 跳过）后消失。
+                // 只在主聊天页顶层出现——用户跳去设置/角色页时它自然不在，回来再看进度。
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.BottomCenter,
+                ) {
+                    OnboardingGuideHost()
+                }
+            }
         }
 
         RikkaConfirmDialog(

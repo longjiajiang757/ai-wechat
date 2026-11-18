@@ -44,6 +44,18 @@ internal object ProviderSecretCodec {
     fun decryptAll(providers: List<ProviderSetting>): List<ProviderSetting> =
         providers.map { provider -> mapApiKey(provider) { stored -> decryptOne(stored) } }
 
+    /**
+     * 摘掉所有 API Key，用于把设置发给 App 之外的地方。
+     *
+     * 内嵌 Web 服务器（`/api/events`）会把 Settings 整个推给浏览器，
+     * 同一局域网里能访问到地址的人都能收到。那里只需要知道有哪些服务商、
+     * 选了哪个模型，不需要 Key，所以发送前统一清空。
+     *
+     * 与加密不同：这里不是「换个形式存」，而是真的不给。
+     */
+    fun stripAll(providers: List<ProviderSetting>): List<ProviderSetting> =
+        providers.map { provider -> mapApiKey(provider) { "" } }
+
     private fun encryptOne(plain: String): String {
         if (!needsEncrypt(plain)) return plain
         return runCatching { SecretCipher.encrypt(plain) }

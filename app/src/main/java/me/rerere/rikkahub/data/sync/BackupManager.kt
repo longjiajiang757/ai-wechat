@@ -15,6 +15,7 @@ import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import me.rerere.rikkahub.data.datastore.ProviderSecretCodec
 import me.rerere.rikkahub.data.datastore.Settings
 import me.rerere.rikkahub.data.datastore.SettingsStore
 import me.rerere.rikkahub.data.datastore.migration.SettingsJsonMigrator
@@ -176,8 +177,20 @@ class BackupManager(
         // 启动次数不在 Settings 里，备份文件里仍放在 settings.json 的这个字段，和旧备份保持一致
         private const val LAUNCH_COUNT_KEY = "launchCount"
 
+        /**
+         * 备份导出前的 API Key 处理。
+         *
+         * 备份文件会被传到 WebDAV / S3 / 网盘，也可能发给别人，
+         * 里面的 settings.json 如果带明文 Key 就等于把账号交出去。
+         * 这里复用落盘那套 [ProviderSecretCodec]：导出前加密。
+         *
+         * 注意密文是用本机 Keystore 密钥加密的，换台机器解不开——
+         * 所以从备份恢复时 Key 会变成空字符串，需要用户重填。
+         * 这是刻意的取舍：宁可恢复后重填，也不让 Key 明文躺在网盘里。
+         */
         private fun Json.encodeSettings(settings: Settings, launchCount: Int): String {
-            val fields = encodeToJsonElement(settings).jsonObject + (LAUNCH_COUNT_KEY to JsonPrimitive(launchCount))
+            val safe = settings.copy(providers = ProviderSecretCodec.encryptAll(settings.providers))
+            val fields = encodeToJsonElement(safe).jsonObject + (LAUNCH_COUNT_KEY to JsonPrimitive(launchCount))
             return encodeToString(JsonObject(fields))
         }
 

@@ -17,6 +17,8 @@ import me.rerere.rikkahub.web.dto.ConversationListInvalidateEvent
 import me.rerere.rikkahub.web.dto.FolderListEvent
 import me.rerere.rikkahub.web.dto.toDto
 import kotlin.time.Duration.Companion.seconds
+import me.rerere.rikkahub.data.datastore.Settings
+import me.rerere.rikkahub.data.datastore.ProviderSecretCodec
 
 /**
  * Multiplexed server-sent events stream.
@@ -42,8 +44,11 @@ fun Route.eventsRoutes(
         }
 
         // Full settings snapshot; StateFlow emits the current value immediately on connect.
+        // API Key 必须在这里摘掉：这条流走的是内嵌 Web 服务器的 HTTP 接口，
+        // 同一局域网里任何拿到地址的浏览器都能收到，明文 Key 等于公开。
+        // 前端只需要知道有哪些服务商、选了哪个模型，不需要 Key 本身。
         val settingsEvents = settingsStore.settingsFlow.map { settings ->
-            EventPayload(event = "settings", json = JsonInstant.encodeToString(settings))
+            EventPayload(event = "settings", json = JsonInstant.encodeToString(settings.withoutSecrets()))
         }
 
         // Conversation list invalidation, scoped to the currently selected assistant.
@@ -113,3 +118,12 @@ private data class EventPayload(
     val event: String,
     val json: String,
 )
+
+/**
+ * 去掉敏感字段后的 [Settings] 副本。
+ *
+ * 目前只处理 `providers[].apiKey`——设置里其它内容（模型选择、主题、
+ * 助手列表）前端要用，也不算秘密，所以只清 Key。
+ */
+private fun Settings.withoutSecrets(): Settings =
+    copy(providers = ProviderSecretCodec.stripAll(providers))

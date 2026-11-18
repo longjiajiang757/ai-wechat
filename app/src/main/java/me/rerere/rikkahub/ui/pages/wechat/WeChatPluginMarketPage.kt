@@ -220,13 +220,13 @@ fun WeChatPluginMarketPage() {
     }
 
     Scaffold(
-        containerColor = WeChatColors.ChatBackground,
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         topBar = {
             TopAppBar(
                 title = { Text("插件市场", fontWeight = FontWeight.SemiBold) },
                 navigationIcon = { BackButton() },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = WeChatColors.ChatBackground
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow
                 )
             )
         }
@@ -267,7 +267,7 @@ private fun AssistantChips(
         Text(
             text = "还没有角色，先去通讯录建一个",
             style = MaterialTheme.typography.bodyMedium,
-            color = WeChatColors.TextSecondary,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(16.dp)
         )
         return
@@ -287,8 +287,8 @@ private fun AssistantChips(
                 modifier = Modifier
                     .clip(RoundedCornerShape(16.dp))
                     .background(
-                        if (selected) WeChatColors.Green
-                        else WeChatColors.ListBackground
+                        if (selected) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.surfaceContainerLowest
                     )
                     .clickable { onSelect(assistant.id) }
                     .padding(horizontal = 14.dp, vertical = 8.dp),
@@ -297,7 +297,7 @@ private fun AssistantChips(
                 Text(
                     text = assistant.name,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = if (selected) Color.White else WeChatColors.TextPrimary,
+                    color = if (selected) Color.White else MaterialTheme.colorScheme.onSurface,
                     fontWeight = if (selected) FontWeight.Medium else FontWeight.Normal
                 )
             }
@@ -316,7 +316,7 @@ private fun PluginRow(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(10.dp))
-            .background(WeChatColors.ListBackground)
+            .background(MaterialTheme.colorScheme.surfaceContainerLowest)
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -341,27 +341,27 @@ private fun PluginRow(
             Text(
                 text = plugin.name,
                 style = MaterialTheme.typography.bodyLarge,
-                color = WeChatColors.TextPrimary,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.Medium
             )
             Spacer(Modifier.height(2.dp))
             Text(
                 text = plugin.description,
                 style = MaterialTheme.typography.bodySmall,
-                color = WeChatColors.TextSecondary
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
         Spacer(Modifier.width(8.dp))
         // 安装/卸载按钮
         val buttonColor = when {
-            !enabled -> WeChatColors.Divider
-            installed -> WeChatColors.Divider
-            else -> WeChatColors.Green
+            !enabled -> MaterialTheme.colorScheme.outlineVariant
+            installed -> MaterialTheme.colorScheme.outlineVariant
+            else -> MaterialTheme.colorScheme.primary
         }
         Text(
             text = if (installed) "卸载" else "安装",
             style = MaterialTheme.typography.bodyMedium,
-            color = if (!enabled) WeChatColors.TextSecondary else Color.White,
+            color = if (!enabled) MaterialTheme.colorScheme.onSurfaceVariant else Color.White,
             modifier = Modifier
                 .clip(RoundedCornerShape(6.dp))
                 .background(buttonColor)

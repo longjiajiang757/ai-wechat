@@ -38,7 +38,6 @@ import androidx.compose.material3.adaptive.currentWindowDpSize
 import androidx.compose.material3.rememberBottomSheetState
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -348,15 +347,11 @@ private fun ChatPageContent(
         previewMode = false
     }
 
-    // 微信风格：亮色主题用浅灰聊天背景，深色主题保留主题背景
     Surface(
-        color = if (isSystemInDarkTheme()) {
-            MaterialTheme.colorScheme.background
-        } else {
-            me.rerere.rikkahub.ui.pages.wechat.WeChatColors.ChatBackground
-        },
+        color = MaterialTheme.colorScheme.background,
         modifier = Modifier.fillMaxSize()
     ) {
+        AppGlobalBackground(modifier = Modifier)
         AssistantBackground(setting = setting, modifier = Modifier.hazeSource(hazeState))
         Scaffold(
             topBar = {

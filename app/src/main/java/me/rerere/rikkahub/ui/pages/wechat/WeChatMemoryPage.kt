@@ -63,7 +63,7 @@ fun WeChatMemoryPage(id: String) {
     val navController = LocalNavController.current
 
     Scaffold(
-        containerColor = WeChatColors.ListBackground,
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
         topBar = {
             TopAppBar(
                 title = {
@@ -72,7 +72,7 @@ fun WeChatMemoryPage(id: String) {
                         Text(
                             text = "${assistant.name} 记住了 ${memories.size} 件事",
                             style = MaterialTheme.typography.bodySmall,
-                            color = WeChatColors.TextSecondary
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 },
@@ -90,7 +90,7 @@ fun WeChatMemoryPage(id: String) {
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = WeChatColors.ListBackground
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
                 )
             )
         }
@@ -158,7 +158,7 @@ private fun MemoryStarCard(
                 text = memory.memoryTitle(),
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Medium,
-                color = WeChatColors.TextPrimary,
+                color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -166,7 +166,7 @@ private fun MemoryStarCard(
         Text(
             text = memory.previewText(),
             style = MaterialTheme.typography.bodySmall,
-            color = WeChatColors.TextSecondary,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             maxLines = 4,
             overflow = TextOverflow.Ellipsis
         )
@@ -184,19 +184,19 @@ private fun EmptyMemoryHint(modifier: Modifier = Modifier) {
             imageVector = HugeIcons.Brain02,
             contentDescription = null,
             modifier = Modifier.size(48.dp),
-            tint = WeChatColors.TextSecondary
+            tint = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Spacer(Modifier.height(12.dp))
         Text(
             text = "星海还是空的",
             style = MaterialTheme.typography.titleMedium,
-            color = WeChatColors.TextPrimary
+            color = MaterialTheme.colorScheme.onSurface
         )
         Spacer(Modifier.height(4.dp))
         Text(
             text = "多聊聊，她会慢慢记住你",
             style = MaterialTheme.typography.bodySmall,
-            color = WeChatColors.TextSecondary
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }

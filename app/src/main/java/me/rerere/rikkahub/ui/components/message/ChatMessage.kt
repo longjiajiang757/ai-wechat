@@ -29,7 +29,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.contentColorFor
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -419,7 +418,7 @@ private fun MessagePartsBlock(
                             if (role == MessageRole.USER) {
                                 ChatMessageBubble(
                                     role = role,
-                                    color = wechatBubbleColor(MaterialTheme.colorScheme.primaryContainer).copy(alpha = settings.displaySetting.bubbleOpacity),
+                                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = settings.displaySetting.bubbleOpacity),
                                     onClick = { onUserMessageClick?.invoke() },
                                     // 用户气泡不占满整行，和助手的回复错开
                                     modifier = Modifier
@@ -456,7 +455,7 @@ private fun MessagePartsBlock(
                                             key(index) {
                                                 ChatMessageBubble(
                                                     role = role,
-                                                    color = wechatIncomingBubbleColor(MaterialTheme.colorScheme.surfaceContainerHigh).copy(alpha = settings.displaySetting.bubbleOpacity),
+                                                    color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = settings.displaySetting.bubbleOpacity),
                                                     modifier = Modifier.animateContentSize(),
                                                 ) {
                                                     MarkdownBlock(
@@ -574,14 +573,12 @@ private fun MessagePartsBlock(
     }
 }
 
-// 微信气泡是小圆角、几乎方方正正的观感；原来的 24dp 是 Material 风格，
-// 一眼就能看出不是微信。靠头像那侧的角再收紧一点，当作气泡的「尖」。
-private val BubbleCorner = 8.dp
-private val BubbleTailCorner = 2.dp
-private val BubblePressedCorner = 6.dp
+private val BubbleCorner = 24.dp
+private val BubbleTailCorner = 6.dp
+private val BubblePressedCorner = 12.dp
 
 /**
- * 消息气泡：小圆角，靠头像一侧的顶角收紧；可点击时按下其余圆角也跟着收紧
+ * 消息气泡：大圆角，靠头像一侧的顶角收紧；可点击时按下其余圆角也跟着收紧
  */
 @Composable
 private fun ChatMessageBubble(
@@ -690,17 +687,3 @@ private fun ChatMessageCitations(annotations: List<UIMessageAnnotation>) {
         }
     }
 }
-
-/**
- * 微信风格气泡配色。
- *
- * 深色主题下不能强行用白底，否则正文看不见；所以亮色主题用微信绿/白，
- * 深色主题仍用主题色，保证可读性。
- */
-@Composable
-private fun wechatBubbleColor(fallback: Color): Color =
-    if (isSystemInDarkTheme()) fallback else me.rerere.rikkahub.ui.pages.wechat.WeChatColors.BubbleOutgoing
-
-@Composable
-private fun wechatIncomingBubbleColor(fallback: Color): Color =
-    if (isSystemInDarkTheme()) fallback else me.rerere.rikkahub.ui.pages.wechat.WeChatColors.BubbleIncoming

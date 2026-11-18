@@ -48,6 +48,7 @@ import me.rerere.hugeicons.stroke.Code
 import me.rerere.hugeicons.stroke.McpServer
 import me.rerere.hugeicons.stroke.Message02
 import me.rerere.hugeicons.stroke.Puzzle
+import me.rerere.hugeicons.stroke.Sparkles
 import me.rerere.hugeicons.stroke.Settings03
 import me.rerere.hugeicons.stroke.Wrench01
 import me.rerere.rikkahub.R
@@ -156,6 +157,20 @@ fun AssistantDetailPage(id: String) {
                         leadingContent = { CardGroupIcon(HugeIcons.Brain02, containerColor = containerColor, contentColor = contentColor) },
                         supportingContent = { Text(stringResource(R.string.assistant_detail_memory_desc)) },
                         headlineContent = { Text(stringResource(R.string.assistant_page_tab_memory)) },
+                    )
+                    // 记忆星海：同一个数据源的「情感视角」，星星网格看她记住了什么
+                    item(
+                        onClick = { navController.navigate(Screen.WeChatMemory(id)) },
+                        leadingContent = { CardGroupIcon(HugeIcons.Sparkles, containerColor = containerColor, contentColor = contentColor) },
+                        supportingContent = { Text("她记住了你什么——星星视角") },
+                        headlineContent = { Text("记忆星海") },
+                    )
+                    // 插件市场：人设扩展（早安问候/深夜陪伴等），装完挂到当前角色
+                    item(
+                        onClick = { navController.navigate(Screen.WeChatPluginMarket) },
+                        leadingContent = { CardGroupIcon(HugeIcons.Puzzle, containerColor = containerColor, contentColor = contentColor) },
+                        supportingContent = { Text("给角色装人设插件，顶部可切换角色") },
+                        headlineContent = { Text("插件市场") },
                     )
                     item(
                         onClick = { navController.navigate(Screen.AssistantMcp(id)) },

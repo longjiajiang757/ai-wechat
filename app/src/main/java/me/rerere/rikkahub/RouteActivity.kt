@@ -123,8 +123,6 @@ import me.rerere.rikkahub.ui.pages.setting.SettingMcpDetailPage
 import me.rerere.rikkahub.ui.pages.setting.SettingMcpPage
 import me.rerere.rikkahub.ui.pages.setting.SettingModelPage
 import me.rerere.rikkahub.ui.pages.setting.SettingPage
-import me.rerere.rikkahub.ui.pages.wechat.WeChatAssistantProfilePage
-import me.rerere.rikkahub.ui.pages.wechat.WeChatHomePage
 import me.rerere.rikkahub.ui.pages.wechat.WeChatMemoryPage
 import me.rerere.rikkahub.ui.pages.wechat.WeChatPluginMarketPage
 import me.rerere.rikkahub.ui.pages.setting.SettingProviderDetailPage
@@ -146,13 +144,8 @@ import okhttp3.OkHttpClient
 import org.koin.android.ext.android.inject
 import org.koin.compose.koinInject
 import kotlin.uuid.Uuid
-import me.rerere.rikkahub.ui.pages.wechat.EvaBootAnimation
-import me.rerere.rikkahub.ui.pages.wechat.EVA_BOOT_DURATION_MS
-import me.rerere.rikkahub.ui.pages.wechat.rememberBootSoundPlayer
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.zIndex
+import me.rerere.rikkahub.ui.hooks.readBooleanPreference
+import me.rerere.rikkahub.ui.hooks.readStringPreference
 
 private const val TAG = "RouteActivity"
 private const val ACTION_TRANSLATE = "me.rerere.rikkahub.action.TRANSLATE"
@@ -300,7 +293,16 @@ class RouteActivity : ComponentActivity() {
         }
         val migrationState by DatabaseMigrationTracker.state.collectAsStateWithLifecycle()
 
-        val startScreen: Screen = Screen.WeChatHome
+        val startScreen = Screen.Chat(
+            id = if (readBooleanPreference("create_new_conversation_on_start", true)) {
+                Uuid.random().toString()
+            } else {
+                readStringPreference(
+                    "lastConversationId",
+                    Uuid.random().toString()
+                ) ?: Uuid.random().toString()
+            }
+        )
 
         val backStack = rememberNavBackStack(startScreen)
         SideEffect {
@@ -351,14 +353,6 @@ class RouteActivity : ComponentActivity() {
                                 slideOutHorizontally { it }
                         },
                         entryProvider = entryProvider {
-                            entry<Screen.WeChatHome> {
-                                WeChatHomePage()
-                            }
-
-                            entry<Screen.WeChatAssistantProfile> { key ->
-                                WeChatAssistantProfilePage(key.id)
-                            }
-
                             entry<Screen.WeChatMemory> { key ->
                                 WeChatMemoryPage(key.id)
                             }
@@ -614,27 +608,6 @@ class RouteActivity : ComponentActivity() {
                             }
                         }
                     )
-                    // 启动动画放在 NavDisplay 之后：Box 里后声明的画在上层，
-                    // 放前面会被主界面盖住。用 zIndex 双保险。
-                    // 只在冷启动放一次，旋转屏幕后（rememberSaveable 恢复）不再播。
-                    var showBootAnimation by rememberSaveable { mutableStateOf(true) }
-                    val bootSound = rememberBootSoundPlayer()
-                    LaunchedEffect(Unit) {
-                        if (showBootAnimation) {
-                            bootSound.play()
-                        }
-                    }
-                    if (showBootAnimation) {
-                        EvaBootAnimation(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .zIndex(10f),
-                            onFinished = {
-                                showBootAnimation = false
-                                bootSound.release()
-                            }
-                        )
-                    }
                     if (BuildConfig.DEBUG) {
                         Text(
                             text = "[开发模式]",
@@ -688,15 +661,7 @@ class RouteActivity : ComponentActivity() {
 }
 
 sealed interface Screen : NavKey {
-    /** 微信风格主界面，作为 App 启动页 */
-    @Serializable
-    data object WeChatHome : Screen
-
-    /** 微信风格的角色资料页（头像/昵称/人设） */
-    @Serializable
-    data class WeChatAssistantProfile(val id: String) : Screen
-
-    /** 微信风格的记忆星海 */
+    /** 记忆星海：「她记住了我什么」的情感视角，数据走 AssistantDetailVM */
     @Serializable
     data class WeChatMemory(val id: String) : Screen
 

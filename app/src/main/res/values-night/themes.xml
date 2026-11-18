@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
   <style name="Theme.Rikkahub" parent="android:Theme.Material.NoActionBar">
-    <!-- 夜间同样铺这张图：图本身是明亮的白天场景，换成黑色反而突兀 -->
-    <item name="android:windowBackground">@drawable/splash_window_bg</item>
+    <item name="android:windowBackground">#FF141218</item>
   </style>
 </resources>

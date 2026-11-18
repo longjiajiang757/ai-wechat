@@ -65,7 +65,6 @@ import me.rerere.rikkahub.ui.components.message.ChatMessage
 import me.rerere.rikkahub.ui.components.ui.ErrorCardsDisplay
 import me.rerere.rikkahub.ui.hooks.ImeLazyListAutoScroller
 import me.rerere.rikkahub.ui.theme.ChatFontProvider
-import me.rerere.rikkahub.ui.pages.wechat.WeChatColors
 import me.rerere.ui.components.ListSelectableItem
 import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -556,7 +555,7 @@ private fun ChatTimeDivider(time: kotlinx.datetime.LocalDateTime) {
         Text(
             text = label,
             style = MaterialTheme.typography.labelSmall,
-            color = WeChatColors.TextSecondary,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier
                 .clip(RoundedCornerShape(4.dp))
                 .background(Color(0x14000000L))

@@ -27,7 +27,9 @@ data class Assistant(
     // 上下文消息条数上限, 超出后阶梯式截断; 0 表示不限制
     val contextMessageLimit: Int = 0,
     val streamOutput: Boolean = true,
-    val enableMemory: Boolean = false,
+    // 记忆默认开启：这个 App 的核心体验是「她记得我」。
+    // 上游默认关闭，新用户不知道有开关，聊了很久记忆星海是空的。
+    val enableMemory: Boolean = true,
     val useGlobalMemory: Boolean = false, // 使用全局共享记忆而非助手隔离记忆
     val autoConsolidateMemory: Boolean = true, // 对话停下来后在后台自动整理记忆; 关闭后只能手动整理
     val enableRecentChatsReference: Boolean = false,

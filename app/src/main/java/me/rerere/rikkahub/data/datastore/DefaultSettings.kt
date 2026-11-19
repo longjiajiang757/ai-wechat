@@ -8,30 +8,17 @@ import me.rerere.tts.provider.TTSProviderSetting
 import kotlin.uuid.Uuid
 
 internal val DEFAULT_ASSISTANT_ID = Uuid.parse("0950e2dc-9bd5-4801-afa3-aa887aa36b4e")
+
+// 上游原本自带两个空名助手（一个全空、一个带通用 systemPrompt），
+// 在界面上都显示成「默认助手」，新用户一进角色列表看到两个同名条目，
+// 完全分不清哪个是哪个。这个 App 的用法是「建角色当伴侣」，
+// 通用助手没有存在价值，删掉第二个；第一个保留，
+// 因为 Settings.assistantId、Conversation 构造参数的默认值都指向它的 id。
 internal val DEFAULT_ASSISTANTS = listOf(
     Assistant(
         id = DEFAULT_ASSISTANT_ID,
         name = "",
         systemPrompt = ""
-    ),
-    Assistant(
-        id = Uuid.parse("3d47790c-c415-4b90-9388-751128adb0a0"),
-        name = "",
-        systemPrompt = """
-            You are a helpful assistant, called {{char}}, based on model {{model_name}}.
-
-            ## Info
-            - Date: {{cur_date}}
-            - Locale: {{locale}}
-            - Timezone: {{timezone}}
-            - Device Info: {{device_info}}
-            - System Version: {{system_version}}
-            - User Nickname: {{user}}
-
-            ## Hint
-            - If the user does not specify a language, reply in the user's primary language.
-            - Remember to use Markdown syntax for formatting, and use latex for mathematical expressions.
-        """.trimIndent()
     ),
 )
 

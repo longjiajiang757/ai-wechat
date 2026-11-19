@@ -76,6 +76,13 @@ object SettingsJsonMigrator {
                 root["providers"] = JsonArray(providers.map(::migrateProviderQuotaQuery))
             }
 
+            // V6: 删掉未改过的第二个默认助手 + 全量打开记忆（与 PreferenceStoreV6Migration 同步）
+            root["assistants"]?.let { element ->
+                root["assistants"] = JsonInstant.parseToJsonElement(
+                    migrateAssistantsJsonV6(JsonInstant.encodeToString(element))
+                )
+            }
+
             JsonInstant.encodeToString(JsonObject(root))
         }.onFailure {
             Log.e(TAG, "migrate: Failed to migrate settings JSON, using original", it)

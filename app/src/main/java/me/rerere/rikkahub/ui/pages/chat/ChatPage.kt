@@ -344,6 +344,7 @@ private fun ChatPageContent(
         }
     }
 
+    var lastSendClickAt by remember { mutableStateOf(0L) }
     TTSAutoPlay(vm = vm, setting = setting, conversation = conversation)
     // 冷启动公告：拉取远端 announcements.json，新的未读公告弹窗一次
     AnnouncementStartupCheck()
@@ -427,6 +428,13 @@ private fun ChatPageContent(
                             toaster.show("请先选择模型", type = ToastType.Error)
                             return@ChatInput
                         }
+                        // 发送防抖：手指抖动/回车键连击会在同一帧里进来两次。
+                        // 服务层有 isEmptyInputMessage 兜底，但编辑重发那条路
+                        // 两次内容相同、都能通过检查，会重复提交编辑；这里统一
+                        // 用 400ms 时间窗挡住第二次。
+                        val now = System.currentTimeMillis()
+                        if (now - lastSendClickAt < 400L) return@ChatInput
+                        lastSendClickAt = now
                         if (inputState.isEditing()) {
                             vm.handleMessageEdit(
                                 parts = inputState.getContents(),
@@ -442,6 +450,10 @@ private fun ChatPageContent(
                         inputState.clearInput()
                     },
                     onLongSendClick = {
+                        // 和 onSendClick 同一个 400ms 时间窗：两个按钮快速连按也只算一次
+                        val now = System.currentTimeMillis()
+                        if (now - lastSendClickAt < 400L) return@ChatInput
+                        lastSendClickAt = now
                         if (inputState.isEditing()) {
                             vm.handleMessageEdit(
                                 parts = inputState.getContents(),

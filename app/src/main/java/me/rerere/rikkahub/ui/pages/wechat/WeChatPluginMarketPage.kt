@@ -238,8 +238,17 @@ fun WeChatPluginMarketPage() {
             .toSet()
     }
 
+    // 上次点击时间（插件 id -> 毫秒）：连点「安装/卸载」会启动多个 update
+    // 协程，虽然数据层 synchronized 保证幂等不写坏，但 UI 会闪「已装→未装→已装」。
+    // 同一插件 400ms 内只受理一次。
+    val lastToggleAt = remember { mutableMapOf<String, Long>() }
+
     fun togglePlugin(plugin: PersonaPlugin, install: Boolean) {
         val assistant = currentAssistant ?: return
+        val now = System.currentTimeMillis()
+        val previous = lastToggleAt[plugin.id] ?: 0L
+        if (now - previous < 400L) return
+        lastToggleAt[plugin.id] = now
         scope.launch {
             settingsStore.update { s ->
                 val existing = s.modeInjections.firstOrNull {

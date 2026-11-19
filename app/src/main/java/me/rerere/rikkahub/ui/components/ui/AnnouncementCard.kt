@@ -33,6 +33,7 @@ import me.rerere.rikkahub.utils.AnnouncementChecker
 import org.koin.compose.koinInject
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import me.rerere.rikkahub.utils.writeClipboardText
 
 /**
  * 冷启动公告检查器。挂在主界面里，自己完成「拉取 → 比对已读 → 弹窗」。

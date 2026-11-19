@@ -77,9 +77,7 @@ jobs:
       # JVM 单元测试先跑：插件表、密钥判定、版本比较这些纯逻辑出问题，
       # 在这一步就拦下，不用等装到手机上才发现。
       - name: Unit tests
-        # 首次接入 CI 先不拦发布（continue-on-error）：跑一两轮确认测试
-        # 全绿后删掉这行，让坏测试直接挡版本。
-        continue-on-error: true
+        # 已验证全绿（run 44424647212），坏测试直接挡发布
         run: |
           chmod +x gradlew
           ./gradlew :app:testGithubDebugUnitTest --stacktrace

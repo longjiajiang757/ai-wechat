@@ -83,6 +83,14 @@ import me.rerere.rikkahub.utils.plus
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 import androidx.compose.ui.graphics.vector.ImageVector
+import me.rerere.rikkahub.utils.AnnouncementChecker
+import me.rerere.rikkahub.utils.Announcement
+import me.rerere.rikkahub.ui.components.ui.AnnouncementViewDialog
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import android.widget.Toast
+import androidx.compose.runtime.rememberCoroutineScope
 
 @Composable
 fun SettingPage(vm: SettingVM = koinViewModel()) {
@@ -313,12 +321,39 @@ fun SettingPage(vm: SettingVM = koinViewModel()) {
             item("aboutSettings") {
                 val containerColor = MaterialTheme.colorScheme.primaryContainer
                 val contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                CardGroup {
+                var showAnnouncement by remember { mutableStateOf(false) }
+                val scope = rememberCoroutineScope()
+                val context = LocalContext.current
+                val checker: AnnouncementChecker = koinInject()
+                var announcement by remember { mutableStateOf<Announcement?>(null) }
+                CardGroup(
+                    title = { Text(stringResource(R.string.setting_page_about)) },
+                ) {
+                    item(
+                        onClick = {
+                            scope.launch {
+                                announcement = withContext(Dispatchers.IO) { checker.fetch() }
+                                if (announcement == null) {
+                                    Toast.makeText(context, "拉取公告失败，检查网络后再试", Toast.LENGTH_SHORT).show()
+                                }
+                                showAnnouncement = announcement != null
+                            }
+                        },
+                        leadingContent = { CardGroupIcon(HugeIcons.Megaphone01, containerColor = containerColor, contentColor = contentColor) },
+                        supportingContent = { Text("AI agent 的最新消息与交流群") },
+                        headlineContent = { Text("官方公告") },
+                    )
                     item(
                         onClick = { navController.navigate(Screen.SettingDonate) },
                         leadingContent = { CardGroupIcon(HugeIcons.InLove, containerColor = containerColor, contentColor = contentColor) },
                         supportingContent = { Text(stringResource(R.string.setting_page_donate_desc)) },
                         headlineContent = { Text(stringResource(R.string.setting_page_donate)) },
+                    )
+                }
+                if (showAnnouncement) {
+                    AnnouncementViewDialog(
+                        announcement = announcement,
+                        onDismiss = { showAnnouncement = false },
                     )
                 }
             }

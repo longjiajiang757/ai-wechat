@@ -109,6 +109,7 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.uuid.Uuid
 import androidx.compose.ui.Alignment
 import me.rerere.rikkahub.ui.pages.wechat.OnboardingGuideHost
+import me.rerere.rikkahub.ui.components.ui.AnnouncementStartupCheck
 
 @Composable
 fun ChatPage(id: Uuid, text: String?, files: List<Uri>, nodeId: Uuid? = null) {
@@ -344,6 +345,8 @@ private fun ChatPageContent(
     }
 
     TTSAutoPlay(vm = vm, setting = setting, conversation = conversation)
+    // 冷启动公告：拉取远端 announcements.json，新的未读公告弹窗一次
+    AnnouncementStartupCheck()
 
     BackHandler(previewMode) {
         previewMode = false

@@ -22,6 +22,7 @@ import me.rerere.rikkahub.utils.UpdateChecker
 import me.rerere.rikkahub.web.WebServerManager
 import me.rerere.tts.provider.TTSManager
 import org.koin.dsl.module
+import me.rerere.rikkahub.utils.AnnouncementChecker
 
 val appModule = module {
     single<Json> { JsonInstant }
@@ -43,6 +44,10 @@ val appModule = module {
             client = get(),
             appScope = get(),
         )
+    }
+
+    single {
+        AnnouncementChecker(client = get())
     }
 
     single {

@@ -87,6 +87,12 @@ import kotlin.math.roundToInt
 import kotlin.uuid.Uuid
 import me.rerere.rikkahub.ui.pages.assistant.detail.BackgroundPicker
 import me.rerere.rikkahub.ui.components.ui.CardGroup
+import org.koin.compose.koinInject
+import me.rerere.common.http.await
+import okhttp3.Request
+import okhttp3.OkHttpClient
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Dispatchers
 
 private val themeJson = Json {
     ignoreUnknownKeys = true
@@ -152,6 +158,11 @@ fun SettingThemePage(vm: SettingVM = koinViewModel()) {
                             }
                         )
                     }
+
+                    RandomAnimeBackgroundRow(
+                        vm = vm,
+                        currentBackground = settings.displaySetting.appBackground,
+                    )
 
                     if (settings.displaySetting.appBackground != null) {
                         val opacity = settings.displaySetting.appBackgroundOpacity.coerceIn(0f, 1f)
@@ -787,5 +798,86 @@ private fun ColorSwatch(color: Color, label: String) {
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+    }
+}
+
+/**
+ * 「抽一张动漫图」：一键换随机动漫背景。
+ *
+ * 图源用 t.alcy.cc/moez——它 302 跳到一张固定的 CDN 图片地址，
+ * 我们存**跳转后的最终地址**，这样背景就是稳定的一张图；
+ * 如果直接存 random.php 那种「每次请求返回不同图」的地址，
+ * Coil 每次加载都会换一张，背景会抽风。
+ *
+ * 自定义背景图入口（BackgroundPicker）原样保留，两者互不影响：
+ * 抽到的图也是写进同一个 appBackground 字段。
+ *
+ * 失败只提示、绝不清空用户现有背景。
+ */
+@Composable
+private fun RandomAnimeBackgroundRow(
+    vm: SettingVM,
+    currentBackground: String?,
+) {
+    val toaster = LocalToaster.current
+    val scope = rememberCoroutineScope()
+    val client = koinInject<OkHttpClient>()
+    var drawing by remember { mutableStateOf(false) }
+
+    formItem(
+        headlineContent = { Text("随机动漫背景") },
+        supportingContent = {
+            Text(
+                if (currentBackground == null) "不知道选哪张？抽一张动漫图当背景"
+                else "再抽一张，换掉现在的背景"
+            )
+        },
+    ) {
+        FilledTonalButton(
+            onClick = {
+                if (drawing) return@FilledTonalButton
+                drawing = true
+                scope.launch {
+                    val result = withContext(Dispatchers.IO) {
+                        runCatching {
+                            val response = client.newCall(
+                                Request.Builder()
+                                    .url("https://t.alcy.cc/moez")
+                                    .get()
+                                    .build()
+                            ).await()
+                            response.use { resp ->
+                                if (!resp.isSuccessful) error("HTTP ${resp.code}")
+                                // okhttp 自动跟随 302，request.url 即最终图片地址
+                                val finalUrl = resp.request.url.toString()
+                                val type = resp.header("Content-Type") ?: ""
+                                // 兜底：万一跳转目标不是图片，别把它存进背景
+                                if (!type.startsWith("image/") &&
+                                    !finalUrl.endsWith(".webp", true) &&
+                                    !finalUrl.endsWith(".jpg", true) &&
+                                    !finalUrl.endsWith(".png", true)
+                                ) error("返回的不是图片")
+                                finalUrl
+                            }
+                        }
+                    }
+                    result.onSuccess { url ->
+                        vm.updateSettings {
+                            it.copy(
+                                displaySetting = it.displaySetting.copy(appBackground = url)
+                            )
+                        }
+                        toaster.show("抽到一张新背景", type = ToastType.Success)
+                    }.onFailure {
+                        toaster.show("没抽到，再试一次", type = ToastType.Error)
+                    }
+                    drawing = false
+                }
+            },
+            enabled = !drawing,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(if (drawing) "抽取中…" else "抽一张动漫图")
+        }
     }
 }

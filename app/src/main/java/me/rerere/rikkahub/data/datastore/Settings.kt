@@ -171,8 +171,10 @@ data class DisplaySetting(
     val enableAutoScroll: Boolean = true,
     val enableLatexRendering: Boolean = true,
     val enableQuoteHighlight: Boolean = false,
-    val enableBlurEffect: Boolean = false,
-    val backgroundEffectType: BackgroundEffectType = BackgroundEffectType.BLUR,
+    // 毛玻璃默认开启：这是 App 的主要视觉风格。
+    // 只影响新装用户——存量用户的开关值存在自己的 DataStore 里，不会被改。
+    val enableBlurEffect: Boolean = true,
+    val backgroundEffectType: BackgroundEffectType = BackgroundEffectType.GLASS,
     /** 全局背景图地址（本地文件 URI 或网络 URL），null 表示用纯色 */
     val appBackground: String? = null,
     /** 全局背景图不透明度 0~1，调低能让文字更清楚 */

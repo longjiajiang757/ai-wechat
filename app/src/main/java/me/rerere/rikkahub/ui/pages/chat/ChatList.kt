@@ -18,7 +18,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListItemInfo
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material3.ContainedLoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -63,6 +62,7 @@ import me.rerere.rikkahub.data.model.withConversation
 import me.rerere.rikkahub.service.ChatError
 import me.rerere.rikkahub.ui.components.message.ChatMessage
 import me.rerere.rikkahub.ui.components.ui.ErrorCardsDisplay
+import me.rerere.rikkahub.ui.components.ui.TypingDots
 import me.rerere.rikkahub.ui.hooks.ImeLazyListAutoScroller
 import me.rerere.rikkahub.ui.theme.ChatFontProvider
 import me.rerere.ui.components.ListSelectableItem
@@ -349,7 +349,8 @@ private fun ChatListNormal(
                 items = conversation.messageNodes,
                 key = { index, item -> item.id },
             ) { index, node ->
-                Column {
+                // 新消息滑入 + 旧消息自动让位（AssistantPicker 同款 animateItem）
+                Column(modifier = Modifier.animateItem()) {
                     // 微信式时间分隔：距上一条超过 5 分钟才显示，避免每条都顶着时间
                     if (shouldShowTimeDivider(conversation.messageNodes, index)) {
                         ChatTimeDivider(node.currentMessage.createdAt)
@@ -425,9 +426,8 @@ private fun ChatListNormal(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        ContainedLoadingIndicator(
-                            modifier = Modifier.size(28.dp)
-                        )
+                        // 她在「组织语言」时先看到三个跳动圆点，比转圈更像真人
+                        TypingDots()
                         AnimatedVisibility(
                             visible = processingStatus != null,
                         ) {

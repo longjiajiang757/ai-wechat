@@ -51,7 +51,7 @@ fun TypingDots(
     val color = MaterialTheme.colorScheme.onSurfaceVariant
     val scales = remember { FloatArray(3) }
     for (i in 0..2) {
-        scales[i] = 0.55f + 0.45f * (0.5f + 0.5f * sin(phase - i * (2f * PI / 3f)))
+        scales[i] = (0.55 + 0.45 * (0.5 + 0.5 * sin(phase - i * (2.0 * PI / 3.0)))).toFloat()
     }
     Row(
         modifier = modifier,

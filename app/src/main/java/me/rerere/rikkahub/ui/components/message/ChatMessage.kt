@@ -102,6 +102,8 @@ import me.rerere.ui.charts.ChartSpec
 import me.rerere.ui.webview.WebViewContentCache
 import java.util.Locale
 import kotlin.time.Duration.Companion.milliseconds
+import me.rerere.rikkahub.ui.components.ui.liquidPress
+import me.rerere.rikkahub.ui.components.ui.liquidPressProgress
 
 @Composable
 fun ChatMessage(
@@ -589,7 +591,12 @@ private fun ChatMessageBubble(
     content: @Composable () -> Unit,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    val pressProgress by animatePressProgress(interactionSource)
+    val liquid = LocalSettings.current.displaySetting.liquidGlass &&
+        LocalSettings.current.displaySetting.enableBlurEffect
+    // 液态玻璃：按压进度走 spring，回弹带果冻感；普通模式维持原 motionScheme 曲线
+    val pressProgress by if (liquid) liquidPressProgress(interactionSource)
+    else animatePressProgress(interactionSource)
+    val pressScaleModifier = if (liquid) Modifier.liquidPress(interactionSource) else Modifier
     val corner = lerp(BubbleCorner, BubblePressedCorner, pressProgress)
     val shape = if (role == MessageRole.USER) {
         RoundedCornerShape(topStart = corner, topEnd = BubbleTailCorner, bottomEnd = corner, bottomStart = corner)
@@ -599,6 +606,7 @@ private fun ChatMessageBubble(
     val contentColor = contentColorFor(color)
     Box(
         modifier = modifier
+            .then(pressScaleModifier)
             .clipDrawing(shape)
             .background(color)
             .then(

@@ -20,6 +20,12 @@ fun AssistantBackground(setting: Settings, modifier: Modifier) {
         MeshGradientBackground(modifier = modifier)
         return
     }
+    // 液态玻璃主题：角色自己没有背景图时，铺一层缓慢流动的极光。
+    // 有背景图时让图优先——用户特意选的图不该被主题盖掉。
+    if (setting.displaySetting.liquidGlass && assistant.background == null) {
+        MeshGradientBackground(modifier = modifier)
+        return
+    }
     if (assistant.background != null) {
         val backgroundColor = MaterialTheme.colorScheme.background
         val backgroundOpacity = assistant.backgroundOpacity.coerceIn(0f, 1f)

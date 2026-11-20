@@ -175,6 +175,12 @@ data class DisplaySetting(
     // 只影响新装用户——存量用户的开关值存在自己的 DataStore 里，不会被改。
     val enableBlurEffect: Boolean = true,
     val backgroundEffectType: BackgroundEffectType = BackgroundEffectType.GLASS,
+    /**
+     * 液态玻璃主题：聊天页背景变成缓慢流动的极光，输入栏和气泡带
+     * 镜面高光与果冻按压回弹。依赖 enableBlurEffect 提供模糊底层，
+     * 关掉模糊时这项自动不生效（见各消费点）。
+     */
+    val liquidGlass: Boolean = true,
     /** 全局背景图地址（本地文件 URI 或网络 URL），null 表示用纯色 */
     val appBackground: String? = null,
     /** 全局背景图不透明度 0~1，调低能让文字更清楚 */

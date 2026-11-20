@@ -119,6 +119,7 @@ import org.koin.compose.koinInject
 import me.rerere.rikkahub.ui.pages.chat.VoicePhase
 import me.rerere.rikkahub.ui.pages.chat.VoiceSessionState
 import kotlin.uuid.Uuid
+import me.rerere.rikkahub.ui.components.ui.liquidSheen
 
 @Composable
 fun ChatInput(
@@ -248,10 +249,24 @@ fun ChatInput(
                         displaySetting = settings.displaySetting,
                         containerColor = containerColor,
                         shape = containerShape,
+                    )
+                    // 液态玻璃：顶端一条渐隐反光带，输入栏像一块厚玻璃
+                    .then(
+                        if (settings.displaySetting.liquidGlass && settings.displaySetting.enableBlurEffect) {
+                            Modifier.liquidSheen(containerShape)
+                        } else Modifier
                     ),
                 shape = containerShape,
                 tonalElevation = 0.dp,
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
+                border = BorderStroke(
+                    1.dp,
+                    if (settings.displaySetting.liquidGlass && settings.displaySetting.enableBlurEffect) {
+                        // 上亮下暗的镜面描边，替代普通 outlineVariant
+                        Color.White.copy(alpha = 0.35f)
+                    } else {
+                        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                    },
+                ),
                 color = if (settings.displaySetting.enableBlurEffect) Color.Transparent else containerColor,
             ) {
                 Column(

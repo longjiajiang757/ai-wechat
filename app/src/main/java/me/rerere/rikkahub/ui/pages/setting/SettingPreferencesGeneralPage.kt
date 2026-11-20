@@ -162,6 +162,12 @@ fun SettingPreferencesGeneralPage(vm: SettingVM = koinViewModel()) {
                         headlineContent = { Text(stringResource(R.string.setting_display_page_background_effect_title)) },
                     )
                     if (displaySetting.enableBlurEffect) {
+                        switchItem(
+                            checked = displaySetting.liquidGlass,
+                            onCheckedChange = { updateDisplaySetting(displaySetting.copy(liquidGlass = it)) },
+                            supportingContent = { Text("聊天页铺极光流动背景，输入栏和气泡带镜面高光与果冻回弹") },
+                            headlineContent = { Text("液态玻璃主题") },
+                        )
                         formItem(
                             headlineContent = { Text(stringResource(R.string.setting_display_page_background_effect_type)) },
                         ) {
